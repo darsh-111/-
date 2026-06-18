@@ -108,6 +108,7 @@ export default function AdminCMS() {
             <Paper sx={{ mb: 4, borderRadius: 2 }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={tab} onChange={(e, v) => setTab(v)} aria-label="cms tabs">
+                        <Tab label="الشريط المتحرك" />
                         <Tab label="الصفحة الرئيسية" />
                         <Tab label="الآيات والرسائل" />
                         <Tab label="الإعلانات" />
@@ -119,8 +120,60 @@ export default function AdminCMS() {
                 </Box>
 
                 <Box sx={{ p: { xs: 2, md: 4 } }}>
-                    {/* Homepage Tab */}
+                    {/* Hero Slider Tab */}
                     <TabPanel value={tab} index={0}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="h6" fontWeight="bold">الشريط المتحرك (Hero Slider)</Typography>
+                            <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('heroSlides', { title: '', subtitle: '', image: '', ctaText: '', ctaLink: '/donate', ctaIcon: 'fa-solid fa-heart', active: true })}>
+                                إضافة شريحة
+                            </Button>
+                        </Box>
+                        <Divider sx={{ mb: 3 }} />
+                        <Grid container spacing={3}>
+                            {(formData.heroSlides || []).length === 0 && (
+                                <Grid item xs={12}>
+                                    <Typography color="text.secondary" textAlign="center" py={4}>
+                                        لا توجد شرائح بعد. أضف أول شريحة لعرضها في واجهة البداية.
+                                    </Typography>
+                                </Grid>
+                            )}
+                            {(formData.heroSlides || []).map((slide, index) => (
+                                <Grid item xs={12} key={slide.id}>
+                                    <Paper variant="outlined" sx={{ p: 2, position: 'relative' }}>
+                                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 8, left: 8 }} onClick={() => handleDeleteArrayItem('heroSlides', slide.id)}>
+                                            <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
+                                        </IconButton>
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} md={8}>
+                                                <TextField fullWidth label="العنوان" value={slide.title} onChange={(e) => handleArrayChange('heroSlides', index, 'title', e.target.value)} />
+                                            </Grid>
+                                            <Grid item xs={12} md={4}>
+                                                <TextField fullWidth label="رابط الزر (مثال: /donate)" value={slide.ctaLink || '/donate'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaLink', e.target.value)} />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField multiline rows={2} fullWidth label="النص الفرعي" value={slide.subtitle} onChange={(e) => handleArrayChange('heroSlides', index, 'subtitle', e.target.value)} />
+                                            </Grid>
+                                            <Grid item xs={12} md={6}>
+                                                <TextField fullWidth label="نص الزر (مثال: تبرع الآن)" value={slide.ctaText} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaText', e.target.value)} />
+                                            </Grid>
+                                            <Grid item xs={12} md={6}>
+                                                <TextField fullWidth label="أيقونة الزر (مثال: fa-solid fa-heart)" value={slide.ctaIcon || 'fa-solid fa-heart'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaIcon', e.target.value)} />
+                                            </Grid>
+                                            <Grid item xs={12} md={10}>
+                                                <TextField fullWidth label="رابط صورة الخلفية (اختياري - URL)" value={slide.image || ''} onChange={(e) => handleArrayChange('heroSlides', index, 'image', e.target.value)} placeholder="https://example.com/image.jpg" />
+                                            </Grid>
+                                            <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <FormControlLabel control={<Switch checked={slide.active !== false} onChange={(e) => handleArrayChange('heroSlides', index, 'active', e.target.checked)} />} label="نشط" />
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </TabPanel>
+
+                    {/* Homepage Tab */}
+                    <TabPanel value={tab} index={1}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>
                             واجهة البداية (Hero Banner)
                         </Typography>
@@ -148,7 +201,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* Islamic Content Tab */}
-                    <TabPanel value={tab} index={1}>
+                    <TabPanel value={tab} index={2}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                             <Typography variant="h6" fontWeight="bold">المحتوى الإسلامي (آيات وأحاديث)</Typography>
                             <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('quranicVerses', { text: '', reference: '', active: true, type: 'quran' })}>
@@ -197,7 +250,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* Announcements Tab */}
-                    <TabPanel value={tab} index={2}>
+                    <TabPanel value={tab} index={3}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                             <Typography variant="h6" fontWeight="bold">شريط الإعلانات والحملات</Typography>
                             <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('announcements', { title: '', text: '', type: 'info', active: true, startDate: '', endDate: '' })}>
@@ -241,7 +294,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* About Us & Testimonials Tab */}
-                    <TabPanel value={tab} index={3}>
+                    <TabPanel value={tab} index={4}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>من نحن</Typography>
                         <Divider sx={{ mb: 3 }} />
                         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -275,7 +328,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* Stats Override Tab */}
-                    <TabPanel value={tab} index={4}>
+                    <TabPanel value={tab} index={5}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                             <Typography variant="h6" fontWeight="bold">إحصائيات المنصة (الرئيسية)</Typography>
                             <FormControlLabel control={<Switch checked={formData.statsConfig?.override || false} onChange={(e) => handleChange('statsConfig', 'override', e.target.checked)} />} label="استخدام أرقام يدوية (بدل الحساب التلقائي)" />
@@ -290,7 +343,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* Theme Settings Tab */}
-                    <TabPanel value={tab} index={5}>
+                    <TabPanel value={tab} index={6}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>المظهر العام والألوان</Typography>
                         <Divider sx={{ mb: 3 }} />
                         <Grid container spacing={3}>
@@ -326,7 +379,7 @@ export default function AdminCMS() {
                     </TabPanel>
 
                     {/* Zakat Tab */}
-                    <TabPanel value={tab} index={6}>
+                    <TabPanel value={tab} index={7}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>
                             إعدادات حساب الزكاة
                         </Typography>

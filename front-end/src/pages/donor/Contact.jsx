@@ -193,7 +193,7 @@ function Contact() {
     const isDark = theme.palette.mode === 'dark';
     const isRTL = theme.direction === 'rtl';
     const tk = tokens(theme);
-    const { state } = useAdminData();
+    const { state, dispatch } = useAdminData();
     const orgInfo = state?.settings?.organization || {};
     const socialLinks = state?.settings?.social || {};
 
@@ -242,6 +242,7 @@ function Contact() {
         setSubmitting(true);
         setTimeout(() => {
             setSubmitting(false);
+            dispatch({ type: 'ADD_CONTACT_MESSAGE', payload: { id: Date.now(), ...form, status: 'جديد', createdAt: new Date().toISOString() } });
             setForm({ name: '', email: '', phone: '', subject: '', message: '', preferredContact: '' });
             setTouched({});
             setSnackbar({ open: true, severity: 'success', message: t('contact.messageSent') });

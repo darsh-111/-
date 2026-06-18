@@ -16,7 +16,7 @@ import {
     useTheme,
     alpha
 } from '@mui/material';
-import { t, getLanguage, formatNumber } from '../../i18n';
+import { t, getLanguage, formatNumber, formatDate } from '../../i18n';
 import { updates } from '../../data/mockData';
 import { useAdminData } from '../../contexts/AdminDataContext';
 import styled from '@emotion/styled';
@@ -394,8 +394,23 @@ function Home() {
     const sectionPy = theme.custom.sectionPadding;
 
     const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+    const [heroIndex, setHeroIndex] = useState(0);
 
+    // Hero slides
+    const heroSlides = useMemo(() => {
+        return (state.content?.heroSlides || []).filter(s => s.active !== false);
+    }, [state.content?.heroSlides]);
+    const currentSlide = heroSlides[heroIndex] || {};
+    const hasMultipleSlides = heroSlides.length > 1;
 
+    // Auto-rotate hero slides
+    useEffect(() => {
+        if (!hasMultipleSlides) return;
+        const timer = setInterval(() => {
+            setHeroIndex(prev => (prev + 1) % heroSlides.length);
+        }, 6000);
+        return () => clearInterval(timer);
+    }, [hasMultipleSlides, heroSlides.length]);
 
     // Active islamic content
     const activeVerses = useMemo(() => {
@@ -473,11 +488,12 @@ function Home() {
             <HeroSection
                 announcementVisible={announcementVisible}
                 sx={{
-                    ...(state.settings?.heroStyle === 'image' && state.content?.heroBanner?.image && {
-                        backgroundImage: `linear-gradient(${theme.palette.hero.overlay}, ${theme.palette.hero.overlay}), url(${state.content.heroBanner.image})`,
+                    ...(currentSlide.image && {
+                        backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${currentSlide.image})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                    })
+                    }),
+                    transition: 'background 0.6s ease',
                 }}
             >
                 <Container>
@@ -495,7 +511,7 @@ function Home() {
                                     animation: `${fadeInUp} 0.8s ease forwards`,
                                 }}
                             >
-                                {state.content?.heroBanner?.title || t('home.heroTitle')}
+                                {currentSlide.title || state.content?.heroBanner?.title || t('home.heroTitle')}
                             </Typography>
                             <Typography
                                 variant="h5"
@@ -509,7 +525,7 @@ function Home() {
                                     animationFillMode: 'forwards',
                                 }}
                             >
-                                {state.content?.heroBanner?.subtitle || t('home.heroSubtitle')}
+                                {currentSlide.subtitle || state.content?.heroBanner?.subtitle || t('home.heroSubtitle')}
                             </Typography>
                             {activeVerses.length > 0 && state.content?.islamicDisplayMode === 'rotating' && (
                                 <Box sx={{ mb: 4, minHeight: 60 }}>
@@ -546,7 +562,7 @@ function Home() {
                             >
                                 <PillButton
                                     component={Link}
-                                    to="/donate"
+                                    to={currentSlide.ctaLink || '/donate'}
                                     variant="contained"
                                     color="primary"
                                     size="large"
@@ -556,7 +572,11 @@ function Home() {
                                         '&:hover': { bgcolor: 'primary.800' }
                                     }}
                                 >
-                                    {t('common.donate')} <i className="fa-solid fa-heart" style={{ marginInlineStart: 8 }}></i>
+                                    {currentSlide.ctaText || t('common.donate')}
+                                    {currentSlide.ctaIcon
+                                        ? <i className={currentSlide.ctaIcon} style={{ marginInlineStart: 8 }}></i>
+                                        : <i className="fa-solid fa-heart" style={{ marginInlineStart: 8 }}></i>
+                                    }
                                 </PillButton>
                                 <PillButton
                                     component={Link}
@@ -575,6 +595,26 @@ function Home() {
                                     {t('common.learnMore')}
                                 </PillButton>
                             </Stack>
+
+                            {/* Hero Slider Dots */}
+                            {hasMultipleSlides && (
+                                <Box sx={{ display: 'flex', gap: 1, mt: 3, justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                                    {heroSlides.map((_, i) => (
+                                        <Box
+                                            key={i}
+                                            onClick={() => setHeroIndex(i)}
+                                            sx={{
+                                                width: i === heroIndex ? 28 : 10,
+                                                height: 8,
+                                                borderRadius: 4,
+                                                bgcolor: i === heroIndex ? 'common.white' : alpha('#fff', 0.4),
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                            }}
+                                        />
+                                    ))}
+                                </Box>
+                            )}
                         </HeroContent>
 
                         {/* --- Illustration Column: 5-Layer Visual --- */}
@@ -739,7 +779,13 @@ function Home() {
                     <Grid container spacing={{ xs: 2, sm: 3 }}>
                         {programs.map((program, i) => (
                             <Grid item xs={6} sm={6} md={3} key={program.id}>
-                                <ProgramCard elevation={0} color={program.color}>
+                                <ProgramCard
+                                    elevation={0}
+                                    color={program.color}
+                                    component={Link}
+                                    to={`/programs/${program.id}`}
+                                    sx={{ textDecoration: 'none', color: 'inherit' }}
+                                >
                                     <Box
                                         className="program-icon"
                                         sx={{
@@ -1078,7 +1124,7 @@ function Home() {
                         </Typography>
                         <Button
                             component={Link}
-                            to="/updates"
+                            to="/blog"
                             endIcon={'←'}
                             sx={{
                                 fontWeight: 500,
@@ -1097,11 +1143,11 @@ function Home() {
                         </Button>
                     </Box>
                     <Grid container spacing={3}>
-                        {updates.slice(0, 3).map((update, i) => (
-                            <Grid item xs={12} md={4} key={update.id} sx={{ display: 'flex' }}>
+                        {(state.blogPosts || []).filter(p => p.status === 'published').slice(0, 3).map((post) => (
+                            <Grid item xs={12} md={4} key={post.id} sx={{ display: 'flex' }}>
                                 <Card
                                     component={Link}
-                                    to={`/updates/${update.id}`}
+                                    to={`/blog/${post.id}`}
                                     sx={{
                                         height: '100%',
                                         width: '100%',
@@ -1110,12 +1156,12 @@ function Home() {
                                             ? '0 2px 10px rgba(0,0,0,0.25)'
                                             : '0 1px 6px rgba(0,0,0,0.06)',
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        p: 2.5,
-                                        gap: 2,
+                                        flexDirection: 'column',
+                                        p: 0,
                                         textDecoration: 'none',
                                         color: 'inherit',
                                         cursor: 'pointer',
+                                        overflow: 'hidden',
                                         willChange: 'transform, box-shadow',
                                         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                                         border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'}`,
@@ -1131,47 +1177,21 @@ function Home() {
                                         },
                                     }}
                                 >
-                                    <Box sx={{ flex: 1, textAlign: 'right' }}>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                fontWeight: 700,
-                                                mb: 0.75,
-                                                lineHeight: 1.45,
-                                                color: 'text.primary',
-                                            }}
-                                        >
-                                            {update.title}
-                                        </Typography>
-                                        <Typography
-                                            variant="caption"
-                                            sx={{
-                                                display: 'block',
-                                                color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)',
-                                                fontWeight: 500,
-                                                letterSpacing: '0.01em',
-                                            }}
-                                        >
-                                            {update.date}
-                                        </Typography>
-                                    </Box>
-
                                     <Box
-                                        className="news-icon-box"
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: 44,
-                                            height: 44,
-                                            borderRadius: '12px',
-                                            bgcolor: alpha(theme.palette.primary.main, isDark ? 0.12 : 0.08),
-                                            color: 'primary.main',
-                                            flexShrink: 0,
-                                            transition: 'transform 0.3s ease',
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-bullhorn" style={{ fontSize: '1.1rem', transform: 'rotate(-20deg)' }}></i>
+                                        component="img"
+                                        src={post.image || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=300&fit=crop'}
+                                        alt={post.title}
+                                        sx={{ width: '100%', height: 160, objectFit: 'cover' }}
+                                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=300&fit=crop'; }}
+                                    />
+                                    <Box sx={{ p: 2 }}>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, lineHeight: 1.4 }}>
+                                            {post.title}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {post.publishedAt ? formatDate(post.publishedAt) : ''}
+                                            {post.category && ` — ${post.category}`}
+                                        </Typography>
                                     </Box>
                                 </Card>
                             </Grid>

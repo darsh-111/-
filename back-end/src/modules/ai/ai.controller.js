@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
-const hasApiKey = GEMINI_API_KEY && GEMINI_API_KEY !== 'your-openai-api-key-here';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const hasApiKey = GEMINI_API_KEY && GEMINI_API_KEY !== 'your-gemini-api-key-here';
 
 let genAI = null;
 if (hasApiKey) {

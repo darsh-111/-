@@ -130,7 +130,7 @@ function Programs() {
 
                                         <Button
                                             component={Link}
-                                            to={`/projects?program=${program.id}`}
+                                            to={`/programs/${program.id}`}
                                             variant="outlined"
                                             fullWidth
                                             color="inherit"
@@ -143,7 +143,7 @@ function Programs() {
                                                 }
                                             }}
                                         >
-                                            عرض المشاريع
+                                            عرض التفاصيل
                                         </Button>
                                     </CardContent>
                                 </ProgramCard>

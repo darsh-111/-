@@ -10,6 +10,9 @@ const STORAGE_KEYS = {
     beneficiaries: 'nour_admin_beneficiaries',
     disbursements: 'nour_admin_disbursements',
     activities: 'nour_admin_activities',
+    blogPosts: 'nour_admin_blogPosts',
+    gallery: 'nour_admin_gallery',
+    contactMessages: 'nour_admin_contactMessages',
     stats: 'nour_admin_stats',
     settings: 'nour_admin_settings',
     content: 'nour_admin_content',
@@ -36,6 +39,13 @@ function buildInitialState() {
     return {
         projects: loadFromStorage(STORAGE_KEYS.projects, initialProjects),
         programs: loadFromStorage(STORAGE_KEYS.programs, initialPrograms),
+        blogPosts: loadFromStorage(STORAGE_KEYS.blogPosts, []),
+        gallery: loadFromStorage(STORAGE_KEYS.gallery, [
+            { id: 1, title: 'توزيع المساعدات', description: 'فريق العمل أثناء توزيع المساعدات', image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=400&h=300&fit=crop' },
+            { id: 2, title: 'القافلة الطبية', description: 'القافلة الطبية في المناطق النائية', image: 'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=400&h=300&fit=crop' },
+            { id: 3, title: 'إفطار صائم', description: 'مشروع إفطار صائم في رمضان', image: 'https://images.unsplash.com/photo-1593078166039-c9878df5c520?w=400&h=300&fit=crop' },
+        ]),
+        contactMessages: loadFromStorage(STORAGE_KEYS.contactMessages, []),
         donations: loadFromStorage(STORAGE_KEYS.donations, initialDonations),
         beneficiaries: loadFromStorage(STORAGE_KEYS.beneficiaries, initialBeneficiaries || []),
         disbursements: loadFromStorage(STORAGE_KEYS.disbursements, initialDisbursements || []),
@@ -84,7 +94,12 @@ function buildInitialState() {
                     useLiveApi: true,
                     goldPrice: 7700,
                     silverPrice: 129
-                }
+                },
+                heroSlides: [
+                    { id: 1, title: 'معاً نصنع الأمل ونبني المستقبل', subtitle: 'نعمل على توفير حياة كريمة للفئات الأكثر احتياجاً من خلال برامج تنموية مستدامة', image: '', ctaText: 'تبرع الآن', ctaLink: '/donate', ctaIcon: 'fa-solid fa-heart', active: true },
+                    { id: 2, title: 'زكاتك تصل لمستحقيها', subtitle: 'نضمن وصول زكاتك إلى مستحقيها بشفافية كاملة من خلال شبكة موثوقة من الشركاء المحليين', image: '', ctaText: 'احسب زكاتك', ctaLink: '/zakat', ctaIcon: 'fa-solid fa-calculator', active: true },
+                    { id: 3, title: 'تطوع معنا واغتنم الأجر', subtitle: 'انضم إلى فريق المتطوعين لدينا وشارك في صنع الأثر الإيجابي في حياة المحتاجين', image: '', ctaText: 'انضم كمتطوع', ctaLink: '/volunteer', ctaIcon: 'fa-solid fa-handshake', active: true },
+                ],
             };
             const loaded = loadFromStorage(STORAGE_KEYS.content, fallbackContent);
             if (loaded) {
@@ -137,6 +152,28 @@ function adminDataReducer(state, action) {
                     p.id === action.payload ? { ...p, featured: !p.featured } : p
                 ),
             };
+
+        // ── Blog Posts ──
+        case 'ADD_BLOG_POST':
+            return { ...state, blogPosts: [...state.blogPosts, action.payload] };
+        case 'UPDATE_BLOG_POST':
+            return { ...state, blogPosts: state.blogPosts.map(p => p.id === action.payload.id ? { ...p, ...action.payload } : p) };
+        case 'DELETE_BLOG_POST':
+            return { ...state, blogPosts: state.blogPosts.filter(p => p.id !== action.payload) };
+
+        // ── Gallery ──
+        case 'ADD_GALLERY_ITEM':
+            return { ...state, gallery: [...state.gallery, action.payload] };
+        case 'UPDATE_GALLERY_ITEM':
+            return { ...state, gallery: state.gallery.map(g => g.id === action.payload.id ? { ...g, ...action.payload } : g) };
+        case 'DELETE_GALLERY_ITEM':
+            return { ...state, gallery: state.gallery.filter(g => g.id !== action.payload) };
+
+        // ── Contact Messages ──
+        case 'ADD_CONTACT_MESSAGE':
+            return { ...state, contactMessages: [action.payload, ...state.contactMessages] };
+        case 'UPDATE_CONTACT_MESSAGE':
+            return { ...state, contactMessages: state.contactMessages.map(m => m.id === action.payload.id ? { ...m, ...action.payload } : m) };
 
         // ── Programs ──
         case 'ADD_PROGRAM':
@@ -261,6 +298,18 @@ export function AdminDataProvider({ children }) {
     useEffect(() => {
         saveToStorage(STORAGE_KEYS.programs, state.programs);
     }, [state.programs]);
+
+    useEffect(() => {
+        saveToStorage(STORAGE_KEYS.blogPosts, state.blogPosts);
+    }, [state.blogPosts]);
+
+    useEffect(() => {
+        saveToStorage(STORAGE_KEYS.gallery, state.gallery);
+    }, [state.gallery]);
+
+    useEffect(() => {
+        saveToStorage(STORAGE_KEYS.contactMessages, state.contactMessages);
+    }, [state.contactMessages]);
 
     useEffect(() => {
         saveToStorage(STORAGE_KEYS.donations, state.donations);

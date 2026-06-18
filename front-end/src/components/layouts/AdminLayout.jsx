@@ -103,7 +103,10 @@ function AdminLayout() {
         { path: '/admin/donations', label: t('admin.donations'), icon: 'fa-solid fa-coins' },
         { path: '/admin/beneficiaries', label: t('admin.beneficiaries'), icon: 'fa-solid fa-users' },
         { path: '/admin/finance', label: t('admin.finance'), icon: 'fa-solid fa-credit-card' },
-        { path: '/admin/cms', label: 'إدارة المحتوى', icon: 'fa-solid fa-pen-nib' }
+        { path: '/admin/cms', label: 'إدارة المحتوى', icon: 'fa-solid fa-pen-nib' },
+        { path: '/admin/blog', label: 'الأخبار', icon: 'fa-solid fa-newspaper' },
+        { path: '/admin/gallery', label: 'المعرض', icon: 'fa-solid fa-images' },
+        { path: '/admin/messages', label: 'الرسائل', icon: 'fa-solid fa-message' },
     ];
 
     const navItems = [
@@ -115,6 +118,9 @@ function AdminLayout() {
         { path: '/admin/finance', label: t('admin.finance'), icon: 'fa-solid fa-credit-card' },
         { path: '/admin/reports', label: t('admin.reports'), icon: 'fa-solid fa-chart-line' },
         { path: '/admin/cms', label: 'إدارة المحتوى', icon: 'fa-solid fa-pen-nib' },
+        { path: '/admin/blog', label: 'الأخبار', icon: 'fa-solid fa-newspaper' },
+        { path: '/admin/gallery', label: 'المعرض', icon: 'fa-solid fa-images' },
+        { path: '/admin/messages', label: 'الرسائل', icon: 'fa-solid fa-message' },
         { path: '/admin/settings', label: t('admin.settings'), icon: 'fa-solid fa-gear' },
     ];
 
