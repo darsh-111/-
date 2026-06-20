@@ -1,97 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Button,
-    Card,
-    CardContent,
-    Avatar,
-    Tabs,
-    Tab,
-    Stack,
-    Divider,
-    TextField,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    IconButton,
-    Chip,
-    useTheme,
-    alpha
-} from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { t, getLanguage, formatCurrency, formatDate } from '../../i18n';
 import { useAuth } from '../../contexts/AuthContext';
-import styled from '@emotion/styled';
+import OverviewTab from './OverviewTab';
+import DonationsTab from './DonationsTab';
+import ProfileTab from './ProfileTab';
 
-// --- Styled Components ---
-
-const ProfileHeader = styled(Box)(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: theme.spacing(3),
-    marginBottom: theme.spacing(4),
-    padding: theme.spacing(3),
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[1],
-}));
-
-const StatCard = styled(Card)(({ theme, color }) => ({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-    padding: theme.spacing(3),
-    border: `1px solid ${theme.palette.divider}`,
-    boxShadow: 'none',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: 4,
-        backgroundColor: color || theme.palette.primary.main,
-    }
-}));
-
-const ActionCard = styled(Card)(({ theme }) => ({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    padding: theme.spacing(4),
-    cursor: 'pointer',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: theme.shadows[4],
-    },
-}));
-
-/**
- * Account Page - User Profile & Dashboard
- */
 function Account() {
-    const theme = useTheme();
     const navigate = useNavigate();
+    const { isDark } = useTheme();
     const { isDonorLoggedIn, donorUser, donorLogout, updateDonorPhoto } = useAuth();
-    
+
     const photoInputRef = useRef(null);
 
     const handlePhotoUpload = useCallback(async (e) => {
@@ -105,11 +25,10 @@ function Account() {
         return ['overview', 'donations', 'profile'].includes(tab) ? tab : 'overview';
     });
 
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = (newValue) => {
         setActiveTab(newValue);
     };
 
-    // Sync tab with URL param changes
     useEffect(() => {
         const tab = searchParams.get('tab');
         if (tab && ['overview', 'donations', 'profile'].includes(tab)) {
@@ -117,31 +36,25 @@ function Account() {
         }
     }, [searchParams]);
 
-    // If not logged in, show login prompt
     if (!isDonorLoggedIn) {
         return (
-            <Box sx={{ py: 10, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Container maxWidth="sm">
-                    <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
-                        <Box sx={{ color: 'text.secondary', fontSize: '3rem', mb: 2 }}>
+            <div className="py-20 min-h-[60vh] flex items-center justify-center">
+                <div className="max-w-lg mx-auto px-4 md:px-6 w-full">
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card p-8 text-center">
+                        <div className="text-neutral-500 dark:text-neutral-400 text-4xl mb-4">
                             <i className="fa-solid fa-lock"></i>
-                        </Box>
-                        <Typography variant="h4" gutterBottom fontWeight="bold">
-                            {'يجب تسجيل الدخول'}
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            {'يرجى تسجيل الدخول لعرض حسابك وسجل تبرعاتك'}
-                        </Typography>
-                        <Button component={Link} to="/login" variant="contained" size="large">
+                        </div>
+                        <h4 className="text-xl font-bold mb-3 dark:text-white">{'يجب تسجيل الدخول'}</h4>
+                        <p className="text-neutral-500 dark:text-neutral-400 mb-6">{'يرجى تسجيل الدخول لعرض حسابك وسجل تبرعاتك'}</p>
+                        <Link to="/login" className="inline-block bg-primary-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-600 transition-colors">
                             {t('nav.login')}
-                        </Button>
-                    </Paper>
-                </Container>
-            </Box>
+                        </Link>
+                    </div>
+                </div>
+            </div>
         );
     }
 
-    // Use data from auth context
     const user = {
         name: donorUser.name,
         email: donorUser.email,
@@ -151,7 +64,6 @@ function Account() {
         donationCount: donorUser.donationCount || 0,
     };
 
-    // Mock donations (would come from API)
     const donations = [
         { id: 1, date: '2024-01-15', project: 'مشروع المياه النظيفة', amount: 5000, status: 'completed' },
         { id: 2, date: '2024-01-10', project: 'كفالة يتيم', amount: 1500, status: 'completed' },
@@ -165,330 +77,84 @@ function Account() {
         navigate('/');
     };
 
+    const tabs = [
+        { value: 'overview', label: 'نظرة عامة', icon: 'fa-solid fa-chart-pie' },
+        { value: 'donations', label: 'تبرعاتي', icon: 'fa-solid fa-hand-holding-heart' },
+        { value: 'profile', label: 'بياناتي', icon: 'fa-solid fa-user' },
+    ];
+
+    const donorInfo = { ...user, photo: donorUser?.photo };
+
     return (
-        <Box sx={{ py: 6, bgcolor: 'background.default', minHeight: '90vh' }}>
-            <Container>
+        <div className="py-12 bg-neutral-50 dark:bg-neutral-900 min-h-[90vh]">
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6">
                 {/* Header */}
-                <ProfileHeader>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <Box sx={{ position: 'relative' }}>
-                            <Avatar
-                                src={donorUser?.photo}
-                                sx={{ width: 80, height: 80, cursor: 'pointer', border: `2px solid ${theme.palette.primary.main}` }}
+                <div className="flex items-center justify-between flex-wrap gap-6 mb-8 p-6 bg-white dark:bg-neutral-800 rounded-lg shadow-card">
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <div
+                                className="w-20 h-20 rounded-full bg-primary-500 text-white flex items-center justify-center text-lg font-bold overflow-hidden cursor-pointer border-2 border-primary-500"
                                 onClick={() => photoInputRef.current?.click()}
                             >
-                                {!donorUser?.photo && <i className="fa-solid fa-user"></i>}
-                            </Avatar>
-                            <IconButton
-                                size="small"
-                                sx={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    right: 'auto',
-                                    left: -10,
-                                    bgcolor: 'background.paper',
-                                    boxShadow: 1,
-                                    '&:hover': { bgcolor: 'background.paper' }
-                                }}
+                                {donorUser?.photo ? (
+                                    <img src={donorUser.photo} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <i className="fa-solid fa-user"></i>
+                                )}
+                            </div>
+                            <button
+                                className="absolute bottom-0 left-[-10px] p-1.5 rounded-md bg-white dark:bg-neutral-700 shadow hover:bg-white dark:hover:bg-neutral-700 transition-colors"
                                 onClick={() => photoInputRef.current?.click()}
                             >
-                                <i className="fa-solid fa-camera" style={{ fontSize: '0.8rem' }}></i>
-                            </IconButton>
+                                <i className="fa-solid fa-camera text-xs"></i>
+                            </button>
                             <input
                                 ref={photoInputRef}
                                 type="file"
                                 accept="image/*"
-                                style={{ display: 'none' }}
+                                className="hidden"
                                 onChange={handlePhotoUpload}
                             />
-                        </Box>
-                        <Box>
-                            <Typography variant="h5" fontWeight="bold">
-                                {'أهلاً'}، {user.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {'عضو منذ'} {formatDate(user.joinDate)}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <Button variant="outlined" color="error" size="small" onClick={handleLogout} startIcon={<i className="fa-solid fa-right-from-bracket"></i>}>
+                        </div>
+                        <div>
+                            <h5 className="text-lg font-bold dark:text-white">{'أهلاً'}، {user.name}</h5>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400">{'عضو منذ'} {formatDate(user.joinDate)}</p>
+                        </div>
+                    </div>
+                    <button onClick={handleLogout} className="border border-error-500 text-error-500 px-4 py-1.5 rounded-md font-semibold hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors text-sm">
+                        <i className="fa-solid fa-right-from-bracket ml-1"></i>
                         {'تسجيل الخروج'}
-                    </Button>
-                </ProfileHeader>
+                    </button>
+                </div>
 
                 {/* Tabs */}
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-                    <Tabs value={activeTab} onChange={handleTabChange}>
-                        <Tab label={'نظرة عامة'} value="overview" icon={<i className="fa-solid fa-chart-pie"></i>} iconPosition="start" />
-                        <Tab label={'تبرعاتي'} value="donations" icon={<i className="fa-solid fa-hand-holding-heart"></i>} iconPosition="start" />
-                        <Tab label={'بياناتي'} value="profile" icon={<i className="fa-solid fa-user"></i>} iconPosition="start" />
-                    </Tabs>
-                </Box>
+                <div className="border-b border-neutral-200 dark:border-neutral-700 mb-6">
+                    <div className="flex gap-0">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.value}
+                                onClick={() => setActiveTab(tab.value)}
+                                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                                    activeTab === tab.value
+                                        ? 'border-primary-500 text-primary-500'
+                                        : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
+                                }`}
+                            >
+                                <i className={tab.icon}></i>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Content */}
-                <Box>
-                    {activeTab === 'overview' && (
-                        <OverviewTab user={user} donations={donations} theme={theme} />
-                    )}
-                    {activeTab === 'donations' && (
-                        <DonationsTab donations={donations} />
-                    )}
-                    {activeTab === 'profile' && (
-                        <ProfileTab user={user} donorUser={donorUser} updateDonorPhoto={updateDonorPhoto} />
-                    )}
-                </Box>
-            </Container>
-        </Box>
-    );
-}
-
-function OverviewTab({ user, donations, theme }) {
-    return (
-        <Stack spacing={4}>
-            {/* Stats */}
-            <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                    <StatCard color={theme.palette.primary.main}>
-                        <Box sx={{ color: 'primary.main', fontSize: '2rem', mb: 2 }}>
-                            <i className="fa-solid fa-coins"></i>
-                        </Box>
-                        <Typography variant="h4" fontWeight="bold" gutterBottom>
-                            {formatCurrency(user.totalDonations)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {'إجمالي تبرعاتك'}
-                        </Typography>
-                    </StatCard>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                    <StatCard color={theme.palette.secondary.main}>
-                        <Box sx={{ color: 'secondary.main', fontSize: '2rem', mb: 2 }}>
-                            <i className="fa-solid fa-gift"></i>
-                        </Box>
-                        <Typography variant="h4" fontWeight="bold" gutterBottom>
-                            {user.donationCount}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {'عدد التبرعات'}
-                        </Typography>
-                    </StatCard>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                    <StatCard color={theme.palette.success.main}>
-                        <Box sx={{ color: 'success.main', fontSize: '2rem', mb: 2 }}>
-                            <i className="fa-solid fa-chart-pie"></i>
-                        </Box>
-                        <Typography variant="h4" fontWeight="bold" gutterBottom>
-                            {user.donationCount > 0 ? formatCurrency(Math.round(user.totalDonations / user.donationCount)) : formatCurrency(0)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {'متوسط التبرع'}
-                        </Typography>
-                    </StatCard>
-                </Grid>
-            </Grid>
-
-            {/* Recent Donations */}
-            <Card>
-                <CardContent>
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                        {'آخر التبرعات'}
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Stack spacing={2}>
-                        {donations.slice(0, 3).map(donation => (
-                            <Box key={donation.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 'none' } }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }}>
-                                        <i className="fa-solid fa-hand-holding-heart"></i>
-                                    </Avatar>
-                                    <Typography fontWeight="medium">{donation.project}</Typography>
-                                </Box>
-                                <Box sx={{ textAlign: 'right' }}>
-                                    <Typography fontWeight="bold" color="primary.main">{formatCurrency(donation.amount)}</Typography>
-                                    <Typography variant="caption" color="text.secondary">{formatDate(donation.date)}</Typography>
-                                </Box>
-                            </Box>
-                        ))}
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Box>
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                    {'إجراءات سريعة'}
-                </Typography>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                        <ActionCard component={Link} to="/donate">
-                            <Box sx={{ fontSize: '2rem', color: 'primary.main', mb: 2 }}>
-                                <i className="fa-solid fa-credit-card"></i>
-                            </Box>
-                            <Typography fontWeight="bold">{'تبرع الآن'}</Typography>
-                        </ActionCard>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <ActionCard component={Link} to="/projects">
-                            <Box sx={{ fontSize: '2rem', color: 'secondary.main', mb: 2 }}>
-                                <i className="fa-solid fa-folder-open"></i>
-                            </Box>
-                            <Typography fontWeight="bold">{'تصفح المشاريع'}</Typography>
-                        </ActionCard>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <ActionCard component={Link} to="/transparency">
-                            <Box sx={{ fontSize: '2rem', color: 'info.main', mb: 2 }}>
-                                <i className="fa-solid fa-file-lines"></i>
-                            </Box>
-                            <Typography fontWeight="bold">{'تقارير الشفافية'}</Typography>
-                        </ActionCard>
-                    </Grid>
-                </Grid>
-            </Box>
-        </Stack>
-    );
-}
-
-function DonationsTab({ donations }) {
-    return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>{'التاريخ'}</TableCell>
-                        <TableCell>{'المشروع'}</TableCell>
-                        <TableCell>{'المبلغ'}</TableCell>
-                        <TableCell>{'الحالة'}</TableCell>
-                        <TableCell>{'الإيصال'}</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {donations.map(donation => (
-                        <TableRow key={donation.id} hover>
-                            <TableCell>{formatDate(donation.date)}</TableCell>
-                            <TableCell>{donation.project}</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', color: 'primary.main' }}>{formatCurrency(donation.amount)}</TableCell>
-                            <TableCell>
-                                <Chip label={'مكتمل'} color="success" size="small" />
-                            </TableCell>
-                            <TableCell>
-                                <IconButton size="small">
-                                    <i className="fa-solid fa-file-invoice"></i>
-                                </IconButton>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
-    );
-}
-
-function ProfileTab({ user, donorUser, updateDonorPhoto }) {
-    const profilePhotoRef = useRef(null);
-
-    const handleProfilePhoto = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        await updateDonorPhoto(file);
-    };
-
-    return (
-        <Stack spacing={4} maxWidth="md">
-            {/* Photo Upload Section */}
-            <Card>
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
-                    <Box sx={{ position: 'relative', mb: 3 }}>
-                        <Avatar
-                            src={donorUser?.photo}
-                            sx={{ width: 120, height: 120, cursor: 'pointer' }}
-                            onClick={() => profilePhotoRef.current?.click()}
-                        >
-                            {!donorUser?.photo && <i className="fa-solid fa-user" style={{ fontSize: '3rem' }}></i>}
-                        </Avatar>
-                        <IconButton
-                            sx={{ position: 'absolute', bottom: 0, right: 0, bgcolor: 'background.paper', boxShadow: 2 }}
-                            onClick={() => profilePhotoRef.current?.click()}
-                        >
-                            <i className="fa-solid fa-camera"></i>
-                        </IconButton>
-                    </Box>
-                    <Stack direction="row" spacing={2}>
-                        <Button variant="outlined" size="small" onClick={() => profilePhotoRef.current?.click()}>
-                            {t('account.changePhoto')}
-                        </Button>
-                        {donorUser?.photo && (
-                            <Button variant="outlined" color="error" size="small" onClick={() => updateDonorPhoto(null)}>
-                                {t('account.removePhoto')}
-                            </Button>
-                        )}
-                    </Stack>
-                    <input
-                        ref={profilePhotoRef}
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleProfilePhoto}
-                    />
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent>
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                        {'معلومات الحساب'}
-                    </Typography>
-                    <Stack spacing={3} component="form" sx={{ mt: 3 }}>
-                        <TextField
-                            label={'الاسم الكامل'}
-                            defaultValue={user.name}
-                            fullWidth
-                        />
-                        <TextField
-                            label={'البريد الإلكتروني'}
-                            type="email"
-                            defaultValue={user.email}
-                            fullWidth
-                        />
-                        <TextField
-                            label={'رقم الهاتف'}
-                            type="tel"
-                            defaultValue={user.phone}
-                            fullWidth
-                        />
-                        <Button variant="contained" type="submit" sx={{ alignSelf: 'flex-start' }}>
-                            {'حفظ التغييرات'}
-                        </Button>
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            <Card sx={{ border: 1, borderColor: 'error.main' }}>
-                <CardContent>
-                    <Typography variant="h6" gutterBottom fontWeight="bold" color="error">
-                        {'إعدادات الحساب'}
-                    </Typography>
-                    <Stack spacing={3} sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                                <Typography fontWeight="medium">{'تغيير كلمة المرور'}</Typography>
-                                <Typography variant="body2" color="text.secondary">{'قم بتحديث كلمة المرور الخاصة بك'}</Typography>
-                            </Box>
-                            <Button variant="outlined" size="small">{'تغيير'}</Button>
-                        </Box>
-                        <Divider />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                                <Typography fontWeight="medium">{'إشعارات البريد'}</Typography>
-                                <Typography variant="body2" color="text.secondary">{'إدارة تفضيلات الإشعارات'}</Typography>
-                            </Box>
-                            <Button variant="outlined" size="small">{'إدارة'}</Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
-        </Stack>
+                <div>
+                    {activeTab === 'overview' && <OverviewTab user={user} donations={donations} isDark={isDark} />}
+                    {activeTab === 'donations' && <DonationsTab donations={donations} isDark={isDark} />}
+                    {activeTab === 'profile' && <ProfileTab isDark={isDark} donorInfo={donorInfo} updateDonorPhoto={updateDonorPhoto} />}
+                </div>
+            </div>
+        </div>
     );
 }
 

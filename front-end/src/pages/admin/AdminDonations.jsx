@@ -1,12 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Box, TextField, MenuItem, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, Grid, Chip, Divider, Select, FormControl } from '@mui/material';
+import { useState, useMemo, useEffect } from 'react';
 import { AdminPageHeader, AdminStatsGrid, AdminFilterBar, AdminDataTable, AdminFormDialog } from '../../components/admin';
 import { formatCurrency, formatDate, t } from '../../i18n';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 
-/**
- * Admin Donations Page — with search, filters, view details, and export
- */
 function AdminDonations() {
     const { state, dispatch } = useAdminData();
     const donations = state.donations;
@@ -20,10 +16,16 @@ function AdminDonations() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
 
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar({ open: false, msg: '', severity: 'success' }), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
+
     const emptyForm = { donor: '', amount: '', project: '', method: 'Cash (Offline)', status: 'completed' };
     const [formData, setFormData] = useState(emptyForm);
 
-    // Apply filters
     const filteredDonations = useMemo(() => {
         return donations.filter(d => {
             if (search && !d.donor.includes(search) && !String(d.id).includes(search)) return false;
@@ -58,28 +60,38 @@ function AdminDonations() {
     const uniqueProjects = [...new Set(donations.map(d => d.project))];
 
     const columns = [
-        { key: 'id', label: t('admin.donationsPage.donationId'), render: (v) => `#${String(v).padStart(5, '0')}`, sx: { fontFamily: 'monospace', color: 'text.secondary' } },
-        { key: 'donor', label: t('admin.donationsPage.donor'), fontWeight: 'medium', render: (v) => <Typography sx={{ cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' }} onClick={() => setViewDonor(v)}>{v}</Typography> },
+        { key: 'id', label: t('admin.donationsPage.donationId'), render: (v) => <span className="font-mono text-neutral-500 dark:text-neutral-400">#{String(v).padStart(5, '0')}</span> },
+        {
+            key: 'donor', label: t('admin.donationsPage.donor'),
+            render: (v) => (
+                <span className="cursor-pointer text-primary-500 underline text-sm font-medium hover:text-primary-600 transition-colors" onClick={() => setViewDonor(v)}>
+                    {v}
+                </span>
+            )
+        },
         { key: 'project', label: t('admin.donationsPage.project') },
-        { key: 'amount', label: t('admin.donationsPage.amount'), render: (v) => formatCurrency(v), fontWeight: 'bold', color: 'primary.main' },
+        { key: 'amount', label: t('admin.donationsPage.amount'), render: (v) => <span className="font-bold text-primary-500">{formatCurrency(v)}</span> },
         { key: 'method', label: t('admin.donationsPage.paymentMethod') },
         { key: 'date', label: t('admin.donationsPage.date'), render: (v) => formatDate(v) },
-        { 
-            key: 'status', label: t('admin.donationsPage.status'), 
+        {
+            key: 'status', label: t('admin.donationsPage.status'),
             render: (val, row) => (
-                <FormControl size="small" variant="standard">
-                    <Select
-                        value={val || 'pending'}
-                        onChange={(e) => handleStatusChange(row, e.target.value)}
-                        disableUnderline
-                        sx={{ fontSize: '0.875rem', fontWeight: 'bold', color: val === 'completed' ? 'success.main' : val === 'rejected' ? 'error.main' : 'warning.main' }}
-                    >
-                        <MenuItem value="pending">قيد المعالجة</MenuItem>
-                        <MenuItem value="completed">مكتمل</MenuItem>
-                        <MenuItem value="rejected">مرفوض</MenuItem>
-                        <MenuItem value="refunded">مسترد</MenuItem>
-                    </Select>
-                </FormControl>
+                <select
+                    value={val || 'pending'}
+                    onChange={(e) => handleStatusChange(row, e.target.value)}
+                    className="text-sm font-bold bg-transparent border-none outline-none cursor-pointer"
+                    style={{
+                        color: val === 'completed' ? 'var(--color-success-500)' :
+                               val === 'rejected' ? 'var(--color-error-500)' :
+                               val === 'refunded' ? 'var(--color-error-500)' :
+                               'var(--color-warning-500)'
+                    }}
+                >
+                    <option value="pending" style={{ color: 'var(--color-warning-500)' }}>قيد المعالجة</option>
+                    <option value="completed" style={{ color: 'var(--color-success-500)' }}>مكتمل</option>
+                    <option value="rejected" style={{ color: 'var(--color-error-500)' }}>مرفوض</option>
+                    <option value="refunded" style={{ color: 'var(--color-error-500)' }}>مسترد</option>
+                </select>
             )
         },
     ];
@@ -120,8 +132,11 @@ function AdminDonations() {
         setSnackbar({ open: true, msg: `جاري تصدير ${filteredDonations.length} تبرع إلى Excel...` });
     };
 
+    const selectClass = "px-2.5 py-1.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none text-sm min-w-[150px]";
+    const snackbarClose = () => setSnackbar({ open: false, msg: '', severity: 'success' });
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.donationsPage.title')}
                 subtitle={t('admin.donationsPage.subtitle')}
@@ -136,27 +151,26 @@ function AdminDonations() {
                 onSearchChange={setSearch}
                 searchPlaceholder={t('admin.donationsPage.searchPlaceholder')}
             >
-                <TextField select size="small" value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} sx={{ minWidth: 180 }} label={t('admin.donationsPage.project')}>
-                    <MenuItem value="">{t('admin.donationsPage.allProjects')}</MenuItem>
-                    {uniqueProjects.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
-                </TextField>
-                <TextField select size="small" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} sx={{ minWidth: 150 }} label={t('admin.donationsPage.status')}>
-                    <MenuItem value="">{t('admin.donationsPage.allStatuses')}</MenuItem>
-                    <MenuItem value="completed">مكتمل</MenuItem>
-                    <MenuItem value="pending">قيد المعالجة</MenuItem>
-                    <MenuItem value="refunded">مسترد</MenuItem>
-                </TextField>
-                <TextField select size="small" value={dateRange} onChange={(e) => setDateRange(e.target.value)} sx={{ minWidth: 150 }} label={t('admin.donationsPage.period')}>
-                    <MenuItem value="all">{t('admin.donationsPage.allPeriods')}</MenuItem>
-                    <MenuItem value="today">{t('admin.donationsPage.today')}</MenuItem>
-                    <MenuItem value="week">{t('admin.donationsPage.thisWeek')}</MenuItem>
-                    <MenuItem value="month">{t('admin.donationsPage.thisMonth')}</MenuItem>
-                </TextField>
+                <select className={selectClass} value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+                    <option value="">{t('admin.donationsPage.allProjects')}</option>
+                    {uniqueProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select className={selectClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="">{t('admin.donationsPage.allStatuses')}</option>
+                    <option value="completed">مكتمل</option>
+                    <option value="pending">قيد المعالجة</option>
+                    <option value="refunded">مسترد</option>
+                </select>
+                <select className={selectClass} value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+                    <option value="all">{t('admin.donationsPage.allPeriods')}</option>
+                    <option value="today">{t('admin.donationsPage.today')}</option>
+                    <option value="week">{t('admin.donationsPage.thisWeek')}</option>
+                    <option value="month">{t('admin.donationsPage.thisMonth')}</option>
+                </select>
             </AdminFilterBar>
 
             <AdminDataTable columns={columns} data={filteredDonations} actions={actions} emptyMessage="لا توجد تبرعات مطابقة للبحث" />
 
-            {/* Add Offline Donation Dialog */}
             <AdminFormDialog
                 open={isAddModalOpen}
                 onClose={() => { setIsAddModalOpen(false); setFormData(emptyForm); }}
@@ -164,90 +178,141 @@ function AdminDonations() {
                 title="إضافة تبرع يدوي (أوفلاين)"
                 submitLabel="إضافة التبرع"
             >
-                <TextField label="اسم المتبرع" fullWidth required value={formData.donor} onChange={(e) => setFormData({ ...formData, donor: e.target.value })} />
-                <TextField label="المبلغ (ج.م)" fullWidth required type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
-                <TextField select label="المشروع الموجه إليه" fullWidth required value={formData.project} onChange={(e) => setFormData({ ...formData, project: e.target.value })}>
-                    {state.projects.map(p => <MenuItem key={p.id} value={p.title}>{p.title}</MenuItem>)}
-                </TextField>
-                <TextField label="طريقة الدفع" fullWidth disabled value={formData.method} />
+                <input
+                    placeholder="اسم المتبرع"
+                    required
+                    value={formData.donor}
+                    onChange={(e) => setFormData({ ...formData, donor: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <input
+                    placeholder="المبلغ (ج.م)"
+                    required
+                    type="number"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <select
+                    required
+                    value={formData.project}
+                    onChange={(e) => setFormData({ ...formData, project: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
+                >
+                    <option value="">المشروع الموجه إليه</option>
+                    {state.projects.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
+                </select>
+                <input
+                    placeholder="طريقة الدفع"
+                    disabled
+                    value={formData.method}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent opacity-60 cursor-not-allowed outline-none"
+                />
             </AdminFormDialog>
 
-            {/* View Donation Dialog */}
-            <Dialog open={!!viewDonation} onClose={() => setViewDonation(null)} maxWidth="sm" fullWidth>
-                {viewDonation && (
-                    <>
-                        <DialogTitle>تفاصيل التبرع #{String(viewDonation.id).padStart(5, '0')}</DialogTitle>
-                        <DialogContent>
-                            <Grid container spacing={2} sx={{ mt: 1 }}>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">المتبرع</Typography>
-                                    <Typography fontWeight="bold">{viewDonation.donor}</Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">المبلغ</Typography>
-                                    <Typography fontWeight="bold" color="primary">{formatCurrency(viewDonation.amount)}</Typography>
-                                </Grid>
-                                <Grid item xs={12}><Divider /></Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">المشروع</Typography>
-                                    <Typography>{viewDonation.project}</Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">طريقة الدفع</Typography>
-                                    <Typography>{viewDonation.method}</Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">التاريخ</Typography>
-                                    <Typography>{formatDate(viewDonation.date)}</Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="caption" color="text.secondary">الحالة</Typography>
-                                    <Box sx={{ mt: 0.5 }}><Chip label={viewDonation.status === 'completed' ? 'مكتمل' : viewDonation.status === 'pending' ? 'قيد المعالجة' : 'مسترد'} color={viewDonation.status === 'completed' ? 'success' : viewDonation.status === 'pending' ? 'warning' : 'error'} size="small" /></Box>
-                                </Grid>
-                            </Grid>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setViewDonation(null)}>إغلاق</Button>
-                            <Button variant="contained" onClick={() => { setViewDonation(null); setSnackbar({ open: true, msg: 'جاري تحميل الإيصال...' }); }}>تحميل الإيصال</Button>
-                        </DialogActions>
-                    </>
-                )}
-            </Dialog>
+            {viewDonation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setViewDonation(null)} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">تفاصيل التبرع #{String(viewDonation.id).padStart(5, '0')}</h2>
+                        <div className="p-4">
+                            <div className="grid grid-cols-12 gap-2 mt-1">
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">المتبرع</p>
+                                    <p className="font-bold text-neutral-900 dark:text-neutral-100">{viewDonation.donor}</p>
+                                </div>
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">المبلغ</p>
+                                    <p className="font-bold text-primary-500">{formatCurrency(viewDonation.amount)}</p>
+                                </div>
+                                <div className="col-span-12"><hr className="border-t border-neutral-200 dark:border-neutral-700" /></div>
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">المشروع</p>
+                                    <p className="text-neutral-900 dark:text-neutral-100">{viewDonation.project}</p>
+                                </div>
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">طريقة الدفع</p>
+                                    <p className="text-neutral-900 dark:text-neutral-100">{viewDonation.method}</p>
+                                </div>
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">التاريخ</p>
+                                    <p className="text-neutral-900 dark:text-neutral-100">{formatDate(viewDonation.date)}</p>
+                                </div>
+                                <div className="col-span-6">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">الحالة</p>
+                                    <div className="mt-0.5">
+                                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                            viewDonation.status === 'completed' ? 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400' :
+                                            viewDonation.status === 'pending' ? 'bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-400' :
+                                            'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400'
+                                        }`}>
+                                            {viewDonation.status === 'completed' ? 'مكتمل' : viewDonation.status === 'pending' ? 'قيد المعالجة' : 'مسترد'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button onClick={() => setViewDonation(null)} className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">إغلاق</button>
+                            <button onClick={() => { setViewDonation(null); setSnackbar({ open: true, msg: 'جاري تحميل الإيصال...' }); }} className="px-5 py-2 rounded-md font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors">تحميل الإيصال</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Donor History Modal */}
-            <Dialog open={!!viewDonor} onClose={() => setViewDonor(null)} maxWidth="md" fullWidth>
-                <DialogTitle>سجل تبرعات: {viewDonor}</DialogTitle>
-                <DialogContent dividers>
-                    <AdminDataTable 
-                        columns={columns.filter(c => c.key !== 'donor')} 
-                        data={donations.filter(d => d.donor === viewDonor)} 
-                        actions={[]} 
-                        emptyMessage="لا توجد تبرعات" 
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setViewDonor(null)}>إغلاق</Button>
-                </DialogActions>
-            </Dialog>
+            {viewDonor && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setViewDonor(null)} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-2xl w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">سجل تبرعات: {viewDonor}</h2>
+                        <div className="p-4 overflow-y-auto">
+                            <AdminDataTable
+                                columns={columns.filter(c => c.key !== 'donor')}
+                                data={donations.filter(d => d.donor === viewDonor)}
+                                actions={[]}
+                                emptyMessage="لا توجد تبرعات"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button onClick={() => setViewDonor(null)} className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">إغلاق</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Delete Confirmation */}
-            <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, id: null })}>
-                <DialogTitle>تأكيد الحذف</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        هل أنت متأكد من حذف هذا التبرع بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء وسيتم خصم المبلغ من إجمالي التبرعات.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDeleteConfirm({ open: false, id: null })} color="inherit">إلغاء</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained">حذف نهائياً</Button>
-                </DialogActions>
-            </Dialog>
+            {deleteConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirm({ open: false, id: null })} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">تأكيد الحذف</h2>
+                        <div className="p-4">
+                            <p className="text-neutral-700 dark:text-neutral-300">
+                                هل أنت متأكد من حذف هذا التبرع بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء وسيتم خصم المبلغ من إجمالي التبرعات.
+                            </p>
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button onClick={() => setDeleteConfirm({ open: false, id: null })} className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">إلغاء</button>
+                            <button onClick={confirmDelete} className="px-5 py-2 rounded-md font-semibold bg-error-500 text-white hover:bg-error-600 transition-colors">حذف نهائياً</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ open: false, msg: '', severity: 'success' })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity || 'success'} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 ${
+                        snackbar.severity === 'success' ? 'bg-success-500 text-white' :
+                        snackbar.severity === 'error' ? 'bg-error-500 text-white' :
+                        'bg-primary-500 text-white'
+                    }`}>
+                        <span>{snackbar.msg}</span>
+                        <button className="text-white/80 hover:text-white mr-2" onClick={snackbarClose}>
+                            <i className="fa-solid fa-xmark" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

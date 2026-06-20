@@ -1,161 +1,106 @@
-import {
-    Card, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Box, Typography, Stack,
-    IconButton, Tooltip, Chip, useTheme, alpha
-} from '@mui/material';
 import { getStatusColor, getStatusLabel } from '../../utils/admin.helpers';
 
-function AdminDataTable({ columns, data, actions, rowKey = 'id', emptyMessage, header }) {
-    const theme = useTheme();
+const STATUS_CHIP_CLASSES = {
+  success: 'bg-success-50 text-success-600 dark:bg-success-100/10 dark:text-success-500',
+  warning: 'bg-warning-50 text-warning-600 dark:bg-warning-100/10 dark:text-warning-500',
+  error: 'bg-error-50 text-error-600 dark:bg-error-100/10 dark:text-error-500',
+  info: 'bg-primary-50 text-primary-600 dark:bg-primary-100/10 dark:text-primary-500',
+  default: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300',
+};
 
-    return (
-        <Card elevation={0} sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1.5,
-            overflow: 'hidden'
-        }}>
-            {header}
-            <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
-                <Table sx={{ minWidth: 650 }}>
-                    <TableHead>
-                        <TableRow sx={{
-                            bgcolor: alpha(theme.palette.secondary.main, 0.04),
-                            borderBottom: '1px solid',
-                            borderColor: 'divider'
-                        }}>
-                            {columns.map((col, i) => (
-                                <TableCell
-                                    key={col.key || i}
-                                    align={col.align || 'inherit'}
-                                    sx={{
-                                        fontWeight: '700',
-                                        fontSize: '0.8125rem',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px',
-                                        color: 'text.primary',
-                                        py: 1.75,
-                                        px: 2,
-                                        ...col.headerSx
-                                    }}
-                                >
-                                    {col.label}
-                                </TableCell>
-                            ))}
-                            {actions && actions.length > 0 && (
-                                <TableCell sx={{
-                                    fontWeight: '700',
-                                    fontSize: '0.8125rem',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    py: 1.75,
-                                    px: 2
-                                }} align="center">
-                                    الإجراءات
-                                </TableCell>
-                            )}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {data.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={columns.length + (actions ? 1 : 0)} align="center" sx={{ py: 4 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {emptyMessage || 'لا توجد بيانات'}
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            data.map((row) => (
-                                <TableRow
-                                    key={row[rowKey]}
-                                    hover
-                                    sx={{
-                                        borderBottom: '1px solid',
-                                        borderColor: 'divider',
-                                        transition: 'all 0.2s ease',
-                                        '&:hover': {
-                                            bgcolor: alpha(theme.palette.secondary.main, 0.04),
-                                            '& .MuiTableCell-root': {
-                                                color: 'text.primary'
-                                            }
-                                        },
-                                        '&:last-child': {
-                                            borderBottomColor: 'divider'
-                                        }
-                                    }}
-                                >
-                                    {columns.map((col, i) => {
-                                        const value = col.key ? row[col.key] : null;
-                                        return (
-                                            <TableCell
-                                                key={col.key || i}
-                                                align={col.align || 'inherit'}
-                                                component={i === 0 ? 'th' : undefined}
-                                                scope={i === 0 ? 'row' : undefined}
-                                                sx={{
-                                                    fontWeight: col.fontWeight || '500',
-                                                    color: col.color || 'text.primary',
-                                                    py: 1.75,
-                                                    px: 2,
-                                                    fontSize: '0.9rem',
-                                                    ...col.sx,
-                                                }}
-                                            >
-                                                {col.render ? col.render(value, row) : (
-                                                    col.type === 'status' ? (
-                                                        <Chip
-                                                            label={getStatusLabel(value)}
-                                                            color={getStatusColor(value)}
-                                                            size="small"
-                                                            variant="filled"
-                                                            sx={{
-                                                                fontWeight: '600',
-                                                                height: '24px',
-                                                                fontSize: '0.75rem'
-                                                            }}
-                                                        />
-                                                    ) : value
-                                                )}
-                                            </TableCell>
-                                        );
-                                    })}
-                                    {actions && actions.length > 0 && (
-                                        <TableCell align="center" sx={{ py: 1.75, px: 2 }}>
-                                            <Stack direction="row" spacing={0.5} justifyContent="center">
-                                                {actions
-                                                    .filter(a => !a.show || a.show(row))
-                                                    .map((action, i) => (
-                                                        <Tooltip title={action.tooltip || ''} key={i}>
-                                                            <IconButton
-                                                                size="small"
-                                                                color={action.color || 'default'}
-                                                                onClick={() => action.onClick?.(row)}
-                                                                sx={{
-                                                                    color: action.color ? undefined : 'text.secondary',
-                                                                    '&:hover': {
-                                                                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                                                                        color: 'secondary.main'
-                                                                    },
-                                                                    transition: 'all 0.2s ease'
-                                                                }}
-                                                            >
-                                                                <i className={action.icon} style={{ fontSize: action.iconSize || 16 }} />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    ))
-                                                }
-                                            </Stack>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))
+const alignMap = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+  justify: 'text-justify',
+};
+
+function AdminDataTable({ columns, data, actions, rowKey = 'id', emptyMessage, header }) {
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+      {header}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+              {columns.map((col, i) => (
+                <th
+                  key={col.key || i}
+                  scope="col"
+                  className={`px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-neutral-100 ${alignMap[col.align] || ''}`}
+                >
+                  {col.label}
+                </th>
+              ))}
+              {actions && actions.length > 0 && (
+                <th scope="col" className="px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-center">
+                  الإجراءات
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length + (actions ? 1 : 0)} className="px-4 py-8 text-center">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    {emptyMessage || 'لا توجد بيانات'}
+                  </p>
+                </td>
+              </tr>
+            ) : (
+              data.map((row) => (
+                <tr
+                  key={row[rowKey]}
+                  className="border-b border-neutral-200 dark:border-neutral-700 transition-all duration-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 last:border-b-0"
+                >
+                  {columns.map((col, i) => {
+                    const value = col.key ? row[col.key] : null;
+                    const Tag = i === 0 ? 'th' : 'td';
+                    const tagProps = i === 0 ? { scope: 'row' } : {};
+                    return (
+                      <Tag
+                        key={col.key || i}
+                        {...tagProps}
+                        className={`px-4 py-3.5 text-sm font-medium text-neutral-900 dark:text-neutral-100 ${alignMap[col.align] || ''}`}
+                      >
+                        {col.render ? col.render(value, row) : (
+                          col.type === 'status' ? (
+                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${STATUS_CHIP_CLASSES[getStatusColor(value)] || STATUS_CHIP_CLASSES.default}`}>
+                              {getStatusLabel(value)}
+                            </span>
+                          ) : value
                         )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Card>
-    );
+                      </Tag>
+                    );
+                  })}
+                  {actions && actions.length > 0 && (
+                    <td className="px-4 py-3.5 text-center">
+                      <div className="flex gap-0.5 justify-center">
+                        {actions
+                          .filter(a => !a.show || a.show(row))
+                          .map((action, i) => (
+                            <button
+                              key={i}
+                              title={action.tooltip || ''}
+                              className="p-1.5 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-neutral-400 hover:text-secondary-500 dark:hover:text-secondary-400"
+                              onClick={() => action.onClick?.(row)}
+                            >
+                              <i className={action.icon} style={{ fontSize: action.iconSize || 16 }} />
+                            </button>
+                          ))
+                        }
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 export default AdminDataTable;

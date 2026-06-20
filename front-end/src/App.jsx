@@ -5,8 +5,7 @@ import { Loading } from './components/common';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import AppRoutes from './routes/AppRoutes';
 
-// Import global styles
-import './styles/tokens.css';
+// Global styles in index.css (tokens merged there)
 
 function App() {
   useEffect(() => {

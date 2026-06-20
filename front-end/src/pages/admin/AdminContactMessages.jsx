@@ -1,5 +1,4 @@
-import { useState, useCallback } from 'react';
-import { Box, Typography, Card, CardContent, Chip, Stack, IconButton, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Button, useTheme, alpha } from '@mui/material';
+import { useState, useCallback, useEffect } from 'react';
 import { AdminPageHeader, AdminDataTable, AdminStatusChip } from '../../components/admin';
 import { formatDate } from '../../i18n';
 import { useAdminData } from '../../contexts/AdminDataContext';
@@ -7,11 +6,17 @@ import { useAdminData } from '../../contexts/AdminDataContext';
 const STATUS_OPTIONS = ['جديد', 'قيد المعالجة', 'تم الرد'];
 
 function AdminContactMessages() {
-    const theme = useTheme();
     const { state, dispatch } = useAdminData();
     const messages = state.contactMessages || [];
 
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const updateStatus = (msg, newStatus) => {
         dispatch({ type: 'UPDATE_CONTACT_MESSAGE', payload: { ...msg, status: newStatus } });
@@ -20,19 +25,19 @@ function AdminContactMessages() {
 
     const columns = [
         { key: 'name', label: 'الاسم', render: (val, row) => (
-            <Box>
-                <Typography variant="body2" fontWeight="medium">{val}</Typography>
-                <Typography variant="caption" color="text.secondary">{row.email}{row.phone ? ` — ${row.phone}` : ''}</Typography>
-            </Box>
+            <div>
+                <p className="text-sm font-medium">{val}</p>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">{row.email}{row.phone ? ` \u2014 ${row.phone}` : ''}</span>
+            </div>
         )},
         { key: 'subject', label: 'الموضوع' },
         { key: 'message', label: 'الرسالة', render: (val) => (
-            <Typography variant="body2" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val}</Typography>
+            <p className="text-sm max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">{val}</p>
         )},
         { key: 'createdAt', label: 'التاريخ', render: (val) => val ? formatDate(val) : '-' },
         { key: 'status', label: 'الحالة', render: (val) => {
-            const colors = { 'جديد': 'error', 'قيد المعالجة': 'warning', 'تم الرد': 'success' };
-            return <Chip label={val || 'جديد'} size="small" color={colors[val] || 'default'} />;
+            const chipColors = { 'جديد': 'bg-error-100 text-error-700', 'قيد المعالجة': 'bg-warning-100 text-warning-700', 'تم الرد': 'bg-success-100 text-success-700' };
+            return <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${chipColors[val] || 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{val || 'جديد'}</span>;
         }},
     ];
 
@@ -42,22 +47,31 @@ function AdminContactMessages() {
     ];
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader title="رسائل التواصل" subtitle="إدارة رسائل الزوار من صفحة اتصل بنا" />
 
             {messages.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
+                <div className="text-center py-16 text-neutral-500 dark:text-neutral-400">
                     <i className="fa-regular fa-message" style={{ fontSize: 48, opacity: 0.3 }} />
-                    <Typography sx={{ mt: 2 }}>لا توجد رسائل بعد</Typography>
-                </Box>
+                    <p className="mt-4">لا توجد رسائل بعد</p>
+                </div>
             ) : (
                 <AdminDataTable columns={columns} data={messages} actions={actions} />
             )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm shadow-lg ${
+                        snackbar.severity === 'success' ? 'bg-success-500 text-white' :
+                        snackbar.severity === 'error' ? 'bg-error-500 text-white' :
+                        snackbar.severity === 'warning' ? 'bg-warning-500 text-white' :
+                        'bg-primary-500 text-white'
+                    }`}>
+                        {snackbar.msg}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

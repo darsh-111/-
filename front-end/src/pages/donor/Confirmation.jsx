@@ -1,25 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Card,
-    CardContent,
-    Typography,
-    Button,
-    Stack,
-    Divider,
-    IconButton,
-    Grid,
-    useTheme,
-    alpha
-} from '@mui/material';
 import { t, formatCurrency } from '../../i18n';
 
 /**
  * Confirmation Page - Thank you / Receipt
  */
 function Confirmation() {
-    const theme = useTheme();
     const [searchParams] = useSearchParams();
     const receiptNumber = searchParams.get('receipt') || Date.now();
 
@@ -33,104 +18,98 @@ function Confirmation() {
     };
 
     return (
-        <Box sx={{ py: 10, minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
-            <Container maxWidth="md">
-                <Card sx={{ textAlign: 'center', p: { xs: 2, md: 5 }, borderRadius: 3, boxShadow: theme.shadows[5] }}>
-                    <CardContent>
+        <div className="py-10 min-h-[80vh] flex items-center">
+            <div className="max-w-[768px] mx-auto px-4 md:px-6">
+                <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl text-center p-2 md:p-5 overflow-hidden border border-neutral-100 dark:border-neutral-700">
+                    <div className="p-2 md:p-5">
                         {/* Success Icon */}
-                        <Box sx={{ mb: 3 }}>
-                            <i className="fa-solid fa-circle-check" style={{ fontSize: '5rem', color: theme.palette.success.main }}></i>
-                        </Box>
+                        <div className="mb-3">
+                            <i className="fa-solid fa-circle-check" style={{ fontSize: '5rem', color: 'var(--color-success-500)' }}></i>
+                        </div>
 
                         {/* Title */}
-                        <Typography variant="h3" fontWeight="bold" gutterBottom>
+                        <h3 className="text-2xl md:text-3xl font-bold mb-2">
                             {t('confirmation.title')}
-                        </Typography>
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                        </h3>
+                        <p className="text-lg text-neutral-500 dark:text-neutral-400 mb-2">
                             {t('confirmation.thankYou')}
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 5, maxWidth: 600, mx: 'auto' }}>
+                        </p>
+                        <p className="text-base mb-5 max-w-[600px] mx-auto text-neutral-700 dark:text-neutral-300">
                             {t('confirmation.impactMessage')}
-                        </Typography>
+                        </p>
 
                         {/* Receipt Details */}
-                        <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05), p: 4, borderRadius: 2, mb: 5, maxWidth: 600, mx: 'auto' }}>
-                            <Stack spacing={2}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography color="text.secondary">{t('confirmation.receiptNumber')}</Typography>
-                                    <Typography fontWeight="medium">{donation.receiptNumber}</Typography>
-                                </Box>
-                                <Divider />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography color="text.secondary">المبلغ</Typography>
-                                    <Typography variant="h6" color="primary.main" fontWeight="bold">{formatCurrency(donation.amount)}</Typography>
-                                </Box>
-                                <Divider />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography color="text.secondary">نوع التبرع</Typography>
-                                    <Typography fontWeight="medium">{donation.type}</Typography>
-                                </Box>
-                                <Divider />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography color="text.secondary">المشروع</Typography>
-                                    <Typography fontWeight="medium">{donation.project}</Typography>
-                                </Box>
-                                <Divider />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography color="text.secondary">التاريخ</Typography>
-                                    <Typography fontWeight="medium">{donation.date}</Typography>
-                                </Box>
-                            </Stack>
-                        </Box>
+                        <div className="bg-primary-50 dark:bg-primary-900/10 p-4 rounded-lg mb-5 max-w-[600px] mx-auto">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex justify-between">
+                                    <span className="text-neutral-500 dark:text-neutral-400">{t('confirmation.receiptNumber')}</span>
+                                    <span className="font-medium">{donation.receiptNumber}</span>
+                                </div>
+                                <hr className="border-t border-neutral-200 dark:border-neutral-700" />
+                                <div className="flex justify-between">
+                                    <span className="text-neutral-500 dark:text-neutral-400">المبلغ</span>
+                                    <span className="text-lg text-primary-500 font-bold">{formatCurrency(donation.amount)}</span>
+                                </div>
+                                <hr className="border-t border-neutral-200 dark:border-neutral-700" />
+                                <div className="flex justify-between">
+                                    <span className="text-neutral-500 dark:text-neutral-400">نوع التبرع</span>
+                                    <span className="font-medium">{donation.type}</span>
+                                </div>
+                                <hr className="border-t border-neutral-200 dark:border-neutral-700" />
+                                <div className="flex justify-between">
+                                    <span className="text-neutral-500 dark:text-neutral-400">المشروع</span>
+                                    <span className="font-medium">{donation.project}</span>
+                                </div>
+                                <hr className="border-t border-neutral-200 dark:border-neutral-700" />
+                                <div className="flex justify-between">
+                                    <span className="text-neutral-500 dark:text-neutral-400">التاريخ</span>
+                                    <span className="font-medium">{donation.date}</span>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Actions */}
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ mb: 4 }}>
-                            <Button
-                                variant="outlined"
-                                startIcon={<i className="fa-solid fa-download"></i>}
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center mb-4">
+                            <button
                                 onClick={() => window.print()}
-                                sx={{ minWidth: 200 }}
+                                className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center justify-center gap-2 min-w-[200px]"
                             >
+                                <i className="fa-solid fa-download"></i>
                                 {t('confirmation.downloadReceipt')}
-                            </Button>
-                        </Stack>
+                            </button>
+                        </div>
 
-                        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 5 }}>
-                            <IconButton color="primary" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                        <div className="flex flex-row gap-1 justify-center mb-5">
+                            <button className="p-2 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors bg-primary-500/10 text-primary-500">
                                 <i className="fa-brands fa-whatsapp"></i>
-                            </IconButton>
-                            <IconButton color="primary" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                            </button>
+                            <button className="p-2 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors bg-primary-500/10 text-primary-500">
                                 <i className="fa-brands fa-facebook-f"></i>
-                            </IconButton>
-                            <IconButton color="primary" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                            </button>
+                            <button className="p-2 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors bg-primary-500/10 text-primary-500">
                                 <i className="fa-brands fa-x-twitter"></i>
-                            </IconButton>
-                        </Stack>
+                            </button>
+                        </div>
 
                         {/* Navigation Links */}
-                        <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={2} justifyContent="center">
-                            <Button
-                                component={Link}
+                        <div className="flex flex-col-reverse sm:flex-row gap-2 justify-center">
+                            <Link
                                 to="/"
-                                variant="text"
-                                color="inherit"
+                                className="text-neutral-600 dark:text-neutral-400 px-3 py-1.5 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-700/50 rounded-md transition-colors text-center"
                             >
                                 {t('confirmation.backToHome')}
-                            </Button>
-                            <Button
-                                component={Link}
+                            </Link>
+                            <Link
                                 to="/donate"
-                                variant="contained"
-                                size="large"
-                                sx={{ minWidth: 200 }}
+                                className="bg-primary-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-600 transition-colors text-center min-w-[200px]"
                             >
                                 {t('confirmation.donateAgain')}
-                            </Button>
-                        </Stack>
-                    </CardContent>
-                </Card>
-            </Container>
-        </Box>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

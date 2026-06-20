@@ -1,51 +1,11 @@
 import { Link } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    CardMedia,
-    CardActions,
-    Button,
-    Chip,
-    Avatar,
-    Stack,
-    TextField,
-    MenuItem,
-    InputAdornment,
-    useTheme,
-    alpha
-} from '@mui/material';
 import { t, formatDate } from '../../i18n';
 import { useAdminData } from '../../contexts/AdminDataContext';
-import styled from '@emotion/styled';
 import { useState, useMemo } from 'react';
-
-const HeroSection = styled(Box)(({ theme }) => ({
-    background: `linear-gradient(135deg, ${theme.palette.hero.base} 0%, ${theme.palette.hero.dark} 100%)`,
-    color: theme.palette.common.white,
-    padding: theme.spacing(10, 0, 6),
-    textAlign: 'center',
-}));
-
-const BlogCard = styled(Card)(({ theme }) => ({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    borderRadius: theme.shape.borderRadius * 2,
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    '&:hover': {
-        transform: 'translateY(-6px)',
-        boxShadow: theme.shadows[8],
-    },
-}));
 
 const CATEGORIES = ['الكل', 'أخبار', 'تقارير', 'قصص نجاح', 'فعاليات', 'مقالات'];
 
 function Blog() {
-    const theme = useTheme();
     const { state } = useAdminData();
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('الكل');
@@ -58,96 +18,78 @@ function Blog() {
     }, [state.blogPosts, search, category]);
 
     return (
-        <Box sx={{ pb: 12 }}>
-            <HeroSection>
-                <Container>
-                    <Typography variant="h3" fontWeight="bold" gutterBottom>
-                        {t('nav.updates') || 'آخر الأخبار'}
-                    </Typography>
-                    <Typography variant="h6" sx={{ opacity: 0.9, maxWidth: 600, mx: 'auto' }}>
-                        تابع آخر أخبارنا وتقاريرنا وقصص النجاح
-                    </Typography>
-                </Container>
-            </HeroSection>
+        <div className="pb-16">
+            <div className="bg-gradient-to-br from-[#0d6b4b] to-[#094a33] text-white py-16 px-0 text-center">
+                <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+                    <h3 className="text-3xl font-bold mb-3">{t('nav.updates') || 'آخر الأخبار'}</h3>
+                    <p className="text-lg opacity-90 max-w-[600px] mx-auto">تابع آخر أخبارنا وتقاريرنا وقصص النجاح</p>
+                </div>
+            </div>
 
-            <Container sx={{ mt: 4 }}>
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6 mt-6">
                 {/* Search & Filter */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
-                    <TextField
-                        size="small"
-                        placeholder="بحث في الأخبار..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        sx={{ minWidth: 280 }}
-                        InputProps={{
-                            startAdornment: <InputAdornment position="start"><i className="fa-solid fa-search" style={{ fontSize: 14 }} /></InputAdornment>,
-                        }}
-                    />
-                    <TextField
-                        select
-                        size="small"
+                <div className="flex gap-3 mb-6 flex-wrap">
+                    <div className="relative min-w-[280px]">
+                        <i className="fa-solid fa-search absolute top-1/2 -translate-y-1/2 right-3 text-sm text-neutral-400"></i>
+                        <input
+                            type="text"
+                            placeholder="بحث في الأخبار..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pr-9 pl-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white text-sm"
+                        />
+                    </div>
+                    <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        sx={{ minWidth: 150 }}
+                        className="min-w-[150px] px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white text-sm"
                     >
                         {CATEGORIES.map(cat => (
-                            <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                            <option key={cat} value={cat}>{cat}</option>
                         ))}
-                    </TextField>
-                </Box>
+                    </select>
+                </div>
 
                 {posts.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
-                        <i className="fa-regular fa-newspaper" style={{ fontSize: 48, opacity: 0.3 }} />
-                        <Typography sx={{ mt: 2 }}>لا توجد منشورات بعد</Typography>
-                    </Box>
+                    <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
+                        <i className="fa-regular fa-newspaper text-5xl opacity-30"></i>
+                        <p className="mt-3">لا توجد منشورات بعد</p>
+                    </div>
                 ) : (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-12 gap-4">
                         {posts.map((post) => (
-                            <Grid item xs={12} sm={6} md={4} key={post.id} sx={{ display: 'flex' }}>
-                                <BlogCard elevation={2}>
-                                    <CardMedia
-                                        component="img"
-                                        height="200"
-                                        image={post.image || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'}
+                            <div className="col-span-12 sm:col-span-6 md:col-span-4 flex" key={post.id}>
+                                <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-md border border-neutral-100 dark:border-neutral-700 overflow-hidden flex flex-col w-full transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg">
+                                    <img
+                                        className="w-full h-48 object-cover"
+                                        src={post.image || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'}
                                         alt={post.title}
-                                        sx={{ objectFit: 'cover' }}
                                         onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'; }}
                                     />
-                                    <CardContent sx={{ flex: 1 }}>
-                                        <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                                    <div className="p-4 flex-1">
+                                        <div className="flex gap-2 mb-2">
                                             {post.category && (
-                                                <Chip label={post.category} size="small" color="primary" variant="outlined" />
+                                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium border border-primary-500 text-primary-500">{post.category}</span>
                                             )}
                                             {post.featured && (
-                                                <Chip label="مميز" size="small" color="error" />
+                                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-error-500 text-white">{'مميز'}</span>
                                             )}
-                                        </Stack>
-                                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                            {post.title}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                            {post.summary}
-                                        </Typography>
-                                    </CardContent>
-                                    <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
-                                        <Button
-                                            component={Link}
-                                            to={`/blog/${post.id}`}
-                                            variant="text"
-                                            size="small"
-                                            sx={{ textTransform: 'none' }}
-                                        >
+                                        </div>
+                                        <h6 className="text-base font-bold mb-2 dark:text-white">{post.title}</h6>
+                                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">{post.summary}</p>
+                                    </div>
+                                    <div className="px-4 pb-4 pt-0">
+                                        <Link to={`/blog/${post.id}`} className="text-primary-500 hover:underline text-sm font-medium">
                                             قراءة المزيد ←
-                                        </Button>
-                                    </CardActions>
-                                </BlogCard>
-                            </Grid>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 )}
-            </Container>
-        </Box>
+            </div>
+        </div>
     );
 }
 

@@ -1,32 +1,9 @@
-import { Box, Typography, TextField, InputAdornment, Collapse, useTheme, alpha } from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getLanguage, formatCurrency } from '../../i18n';
-import { keyframes } from '@emotion/react';
+import { useInjectStyles } from '../../utils/injectStyles';
 
-// ─── Design Tokens ───────────────────────────────────────────────
-const DARK_CARD = '#1e293b';
-const DARK_TEXT = '#e2e8f0';
-const DARK_HEAD = '#f8fafc';
-const ARABIC_FONT = "'Cairo', 'Tajawal', sans-serif";
-const LATIN_FONT = "'Inter', 'Manrope', sans-serif";
-
-// ─── Animations ──────────────────────────────────────────────────
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
-// ─── Hide number spinners ────────────────────────────────────────
-const noSpinnerSx = {
-    '& input[type=number]': { MozAppearance: 'textfield' },
-    '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-        WebkitAppearance: 'none', margin: 0,
-    },
-};
-
-// ─── Helpers ─────────────────────────────────────────────────────
 const loc = (ar, en) => (getLanguage() === 'en' ? en : ar);
 
-// ─── Irrigation Options Data ─────────────────────────────────────
 const IRRIGATION_OPTIONS = [
     {
         key: 'natural',
@@ -60,9 +37,17 @@ const IRRIGATION_OPTIONS = [
     },
 ];
 
-// ═════════════════════════════════════════════════════════════════
-//  CropsCalculator
-// ═════════════════════════════════════════════════════════════════
+const cropsStyles = `
+    @keyframes fadeInUpCrops {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none; margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
+`;
 
 export default function CropsCalculator({
     cropWeight,
@@ -73,361 +58,228 @@ export default function CropsCalculator({
     expanded,
     onToggle,
 }) {
-    const theme = useTheme();
-    const dk = theme.palette.mode === 'dark';
-    const font = ARABIC_FONT;
-    const G_GREEN = theme.palette.primary.main;
-
-    // ── Shared input styling ──
-    const inputSx = {
-        ...noSpinnerSx,
-        '& .MuiOutlinedInput-root': {
-            borderRadius: '14px',
-            fontFamily: LATIN_FONT,
-            bgcolor: dk ? 'rgba(255,255,255,0.04)' : '#fafafa',
-            '& fieldset': { borderColor: dk ? 'rgba(255,255,255,0.10)' : '#e0e0e0' },
-            '&:hover fieldset': { borderColor: alpha(G_GREEN, 0.4) },
-            '&.Mui-focused fieldset': { borderColor: G_GREEN },
-        },
-        '& .MuiInputLabel-root': { fontFamily: font },
-    };
+    const { isDark: dk } = useTheme();
+    useInjectStyles(cropsStyles, 'crops-styles');
 
     return (
-        <Box
-            sx={{
-                borderRadius: '20px',
-                bgcolor: dk ? DARK_CARD : '#fff',
-                border: `1px solid ${dk ? 'rgba(255,255,255,0.06)' : '#eef2f7'}`,
-                boxShadow: dk ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 16px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-                animation: `${fadeInUp} 0.35s ease both`,
-                transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
-                '&:hover': {
-                    boxShadow: dk ? '0 6px 28px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.08)',
-                },
-            }}
+        <div
+            className={`rounded-[20px] overflow-hidden transition-all duration-300 border ${
+                dk
+                    ? 'bg-[#1e293b] shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-white/5 hover:shadow-[0_6px_28px_rgba(0,0,0,0.4)]'
+                    : 'bg-white shadow-[0_2px_16px_rgba(0,0,0,0.05)] border-[#eef2f7] hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)]'
+            }`}
+            style={{ animation: 'fadeInUpCrops 0.35s ease both' }}
         >
-            {/* ═══ HEADER (Clickable) ═══ */}
-            <Box
+            {/* HEADER */}
+            <div
                 onClick={onToggle}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: { xs: 2, md: 3 },
-                    py: { xs: 1.8, md: 2.2 },
-                    cursor: 'pointer',
-                    transition: 'background 0.2s ease',
-                    userSelect: 'none',
-                    '&:hover': {
-                        bgcolor: dk ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)',
-                    },
-                }}
+                className={`flex items-center gap-1.5 px-4 md:px-6 py-[1.1rem] md:py-[1.35rem] cursor-pointer select-none transition-colors duration-200 ${
+                    dk ? 'hover:bg-white/[0.03]' : 'hover:bg-black/[0.015]'
+                }`}
             >
                 {/* Green circle icon */}
-                <Box
-                    sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: '50%',
-                        bgcolor: alpha(G_GREEN, dk ? 0.15 : 0.1),
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'transform 0.25s ease',
-                        '&:hover': { transform: 'scale(1.05)' },
-                    }}
+                <div
+                    className={`w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 hover:scale-105 ${
+                        dk ? 'bg-primary-500/15' : 'bg-primary-500/10'
+                    }`}
                 >
-                    <i
-                        className="fa-solid fa-wheat-awn"
-                        style={{ fontSize: '1rem', color: G_GREEN }}
-                    />
-                </Box>
+                    <i className="fa-solid fa-wheat-awn text-primary-500" style={{ fontSize: '1rem' }} />
+                </div>
 
                 {/* Title */}
-                <Typography
-                    sx={{
-                        fontFamily: font,
-                        fontWeight: 800,
-                        fontSize: '1.1rem',
-                        color: dk ? DARK_HEAD : '#1a1a1a',
-                        flex: 1,
-                    }}
+                <h3
+                    className="flex-1 font-extrabold text-[1.1rem]"
+                    style={{ color: dk ? '#f8fafc' : '#1a1a1a' }}
                 >
                     {loc('الزروع والثمار', 'Agriculture & Crops')}
-                </Typography>
+                </h3>
 
                 {/* Crops zakat badge */}
                 {cropsZakat > 0 && (
-                    <Box
-                        sx={{
-                            px: 1.5,
-                            py: 0.35,
-                            borderRadius: '20px',
-                            bgcolor: alpha(G_GREEN, dk ? 0.15 : 0.1),
-                            border: `1px solid ${alpha(G_GREEN, 0.25)}`,
-                            flexShrink: 0,
-                        }}
+                    <div
+                        className={`shrink-0 px-1.5 py-[0.35rem] rounded-full border ${
+                            dk ? 'bg-primary-500/15 border-primary-500/25' : 'bg-primary-500/10 border-primary-500/25'
+                        }`}
                     >
-                        <Typography
-                            sx={{
-                                fontFamily: LATIN_FONT,
-                                fontWeight: 700,
-                                fontSize: '0.75rem',
-                                color: G_GREEN,
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
+                        <span className="font-bold text-[0.75rem] whitespace-nowrap text-primary-500 font-latin">
                             {cropsZakat.toFixed(1)} {loc('كجم', 'kg')}
-                        </Typography>
-                    </Box>
+                        </span>
+                    </div>
                 )}
 
                 {/* Chevron */}
-                <Box
-                    sx={{
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                <div
+                    className="shrink-0 flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    style={{
                         transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                        color: dk ? alpha(DARK_TEXT, 0.4) : '#bbb',
+                        color: dk ? 'rgba(226,232,240,0.4)' : '#bbb',
                         fontSize: '0.85rem',
                     }}
                 >
                     <i className="fa-solid fa-chevron-down" />
-                </Box>
-            </Box>
+                </div>
+            </div>
 
-            {/* ═══ COLLAPSIBLE BODY ═══ */}
-            <Collapse in={expanded} timeout={350} easing="cubic-bezier(0.4,0,0.2,1)">
-                <Box
-                    sx={{
-                        px: { xs: 2, md: 3 },
-                        pb: { xs: 2.5, md: 3 },
-                        pt: 0.5,
-                    }}
-                >
+            {/* BODY */}
+            <div
+                className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+            >
+                <div className="px-4 md:px-6 pb-5 md:pb-6 pt-1">
                     {/* Description */}
-                    <Typography
-                        sx={{
-                            fontFamily: font,
-                            fontSize: '0.8rem',
-                            color: dk ? alpha(DARK_TEXT, 0.6) : '#888',
-                            mb: 3,
-                            lineHeight: 1.7,
-                        }}
+                    <p
+                        className="text-[0.8rem] mb-3 leading-relaxed"
+                        style={{ color: dk ? 'rgba(226,232,240,0.6)' : '#888' }}
                     >
                         {loc(
                             'أدخل وزن المحصول واختر طريقة الري المناسبة لحساب زكاة الزروع.',
                             'Enter the harvest weight and select the irrigation method to calculate your crops Zakat.'
                         )}
-                    </Typography>
+                    </p>
 
                     {/* Weight Input */}
-                    <TextField
-                        placeholder={loc('وزن المحصول', 'Harvest weight')}
-                        type="number"
-                        fullWidth
-                        value={cropWeight}
-                        onChange={(e) => onCropChange(e.target.value)}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Typography
-                                        sx={{
-                                            fontFamily: font,
-                                            fontSize: '0.85rem',
-                                            color: dk ? alpha(DARK_TEXT, 0.5) : '#999',
-                                        }}
-                                    >
-                                        {loc('كجم', 'kg')}
-                                    </Typography>
-                                </InputAdornment>
-                            ),
-                        }}
-                        sx={{ ...inputSx, maxWidth: 500, mb: 3 }}
-                    />
+                    <div className="relative max-w-[500px] mb-3">
+                        <input
+                            placeholder={loc('وزن المحصول', 'Harvest weight')}
+                            type="number"
+                            value={cropWeight}
+                            onChange={(e) => onCropChange(e.target.value)}
+                            className={`w-full px-3 py-2.5 border rounded-xl bg-transparent focus:ring-2 focus:ring-primary-500 outline-none transition-colors font-latin text-[0.95rem] ${
+                                dk
+                                    ? 'border-white/10 bg-white/5 hover:border-primary-500/40 focus:border-primary-500'
+                                    : 'border-[#e0e0e0] bg-[#fafafa] hover:border-primary-500/40 focus:border-primary-500'
+                            }`}
+                        />
+                        <span
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem] pointer-events-none"
+                            style={{ color: dk ? 'rgba(226,232,240,0.5)' : '#999' }}
+                        >
+                            {loc('كجم', 'kg')}
+                        </span>
+                    </div>
 
-                    {/* ── Irrigation Method Section ── */}
-                    <Typography
-                        sx={{
-                            fontFamily: font,
-                            fontWeight: 700,
-                            fontSize: '0.85rem',
-                            color: dk ? alpha(DARK_TEXT, 0.7) : '#555',
-                            mb: 1.5,
-                        }}
+                    {/* Irrigation Method Section */}
+                    <p
+                        className="font-bold text-[0.85rem] mb-1.5"
+                        style={{ color: dk ? 'rgba(226,232,240,0.7)' : '#555' }}
                     >
                         {loc('طريقة الري', 'Irrigation Method')}
-                    </Typography>
+                    </p>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+                    <div className="flex flex-col gap-1.2">
                         {IRRIGATION_OPTIONS.map((opt) => {
                             const selected = irrigationMode === opt.key;
                             return (
-                                <Box
+                                <div
                                     key={opt.key}
                                     onClick={() => onIrrigationChange(opt.key)}
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1.5,
-                                        px: 2,
-                                        py: 1.5,
-                                        borderRadius: '14px',
-                                        cursor: 'pointer',
-                                        border: `1.5px solid ${
-                                            selected
-                                                ? opt.color
-                                                : dk
-                                                ? 'rgba(255,255,255,0.08)'
-                                                : '#eef2f7'
-                                        }`,
-                                        bgcolor: selected
-                                            ? alpha(opt.color, dk ? 0.1 : 0.05)
+                                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl cursor-pointer select-none transition-all duration-250 hover:-translate-y-[1px] ${
+                                        selected
+                                            ? dk
+                                                ? 'border-[1.5px] bg-primary-500/10 shadow-[0_2px_12px_rgba(0,0,0,0.15)]'
+                                                : 'border-[1.5px] bg-primary-500/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.15)]'
                                             : dk
-                                            ? 'rgba(255,255,255,0.02)'
-                                            : '#fafbfc',
-                                        boxShadow: selected
-                                            ? `0 2px 12px ${alpha(opt.color, 0.15)}`
-                                            : 'none',
-                                        transition: 'all 0.25s ease',
-                                        userSelect: 'none',
-                                        '&:hover': {
-                                            borderColor: alpha(opt.color, 0.5),
-                                            bgcolor: alpha(opt.color, dk ? 0.08 : 0.04),
-                                            transform: 'translateY(-1px)',
-                                            boxShadow: `0 3px 14px ${alpha(opt.color, 0.12)}`,
-                                        },
+                                                ? 'border border-white/[0.08] bg-white/[0.02]'
+                                                : 'border border-[#eef2f7] bg-[#fafbfc]'
+                                    }`}
+                                    style={{
+                                        borderColor: selected ? opt.color : undefined,
+                                        boxShadow: selected ? `0 2px 12px ${opt.color}26` : 'none',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!selected) {
+                                            e.currentTarget.style.borderColor = `${opt.color}80`;
+                                            e.currentTarget.style.backgroundColor = dk ? `${opt.color}14` : `${opt.color}0a`;
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!selected) {
+                                            e.currentTarget.style.borderColor = dk ? 'rgba(255,255,255,0.08)' : '#eef2f7';
+                                            e.currentTarget.style.backgroundColor = dk ? 'rgba(255,255,255,0.02)' : '#fafbfc';
+                                        }
                                     }}
                                 >
                                     {/* Option Icon */}
-                                    <Box
-                                        sx={{
-                                            width: 38,
-                                            height: 38,
-                                            borderRadius: '10px',
-                                            bgcolor: alpha(opt.color, dk ? 0.15 : 0.1),
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexShrink: 0,
-                                            transition: 'transform 0.2s ease',
-                                        }}
+                                    <div
+                                        className={`w-[38px] h-[38px] rounded-[10px] flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                                            dk ? 'bg-primary-500/15' : 'bg-primary-500/10'
+                                        }`}
+                                        style={{ backgroundColor: `${opt.color}26` }}
                                     >
                                         <i
                                             className={`fa-solid ${opt.icon}`}
                                             style={{ fontSize: '0.95rem', color: opt.color }}
                                         />
-                                    </Box>
+                                    </div>
 
                                     {/* Option Text */}
-                                    <Box sx={{ flex: 1, textAlign: 'right' }}>
-                                        <Typography
-                                            sx={{
-                                                fontFamily: font,
-                                                fontWeight: 700,
-                                                fontSize: '0.82rem',
+                                    <div className="flex-1">
+                                        <p
+                                            className="font-bold text-[0.82rem] transition-colors duration-200"
+                                            style={{
                                                 color: selected
-                                                    ? (dk ? DARK_HEAD : '#1a1a1a')
-                                                    : (dk ? DARK_TEXT : '#555'),
-                                                transition: 'color 0.2s ease',
+                                                    ? dk ? '#f8fafc' : '#1a1a1a'
+                                                    : dk ? '#e2e8f0' : '#555',
                                             }}
                                         >
                                             {loc(opt.labelAr, opt.labelEn)}
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                fontFamily: font,
-                                                fontSize: '0.68rem',
-                                                color: dk ? alpha(DARK_TEXT, 0.5) : '#999',
-                                                mt: 0.2,
-                                            }}
+                                        </p>
+                                        <p
+                                            className="text-[0.68rem] mt-[0.2]"
+                                            style={{ color: dk ? 'rgba(226,232,240,0.5)' : '#999' }}
                                         >
                                             {loc(opt.descAr, opt.descEn)}
-                                        </Typography>
-                                    </Box>
+                                        </p>
+                                    </div>
 
                                     {/* Rate Badge */}
-                                    <Box
-                                        sx={{
-                                            px: 1.2,
-                                            py: 0.3,
-                                            borderRadius: '8px',
-                                            bgcolor: selected
-                                                ? alpha(opt.color, dk ? 0.2 : 0.12)
-                                                : dk
-                                                ? 'rgba(255,255,255,0.04)'
-                                                : '#f0f4f8',
-                                            flexShrink: 0,
-                                            transition: 'all 0.2s ease',
-                                        }}
+                                    <div
+                                        className={`shrink-0 px-1.2 py-[0.3] rounded-[8px] transition-all duration-200 ${
+                                            selected
+                                                ? dk ? 'bg-primary-500/20' : 'bg-primary-500/12'
+                                                : dk ? 'bg-white/[0.04]' : 'bg-[#f0f4f8]'
+                                        }`}
+                                        style={selected ? { backgroundColor: `${opt.color}33` } : {}}
                                     >
-                                        <Typography
-                                            sx={{
-                                                fontFamily: LATIN_FONT,
-                                                fontWeight: 800,
-                                                fontSize: '0.78rem',
-                                                color: selected ? opt.color : (dk ? alpha(DARK_TEXT, 0.5) : '#aaa'),
-                                                transition: 'color 0.2s ease',
+                                        <span
+                                            className="font-extrabold text-[0.78rem] font-latin transition-colors duration-200"
+                                            style={{
+                                                color: selected ? opt.color : dk ? 'rgba(226,232,240,0.5)' : '#aaa',
                                             }}
                                         >
                                             {opt.rate}
-                                        </Typography>
-                                    </Box>
-                                </Box>
+                                        </span>
+                                    </div>
+                                </div>
                             );
                         })}
-                    </Box>
+                    </div>
 
-                    {/* ── Result Preview ── */}
+                    {/* Result Preview */}
                     {parseFloat(cropWeight) > 0 && (
-                        <Box
-                            sx={{
-                                mt: 2.5,
-                                p: 1.5,
-                                borderRadius: '12px',
-                                bgcolor: alpha(G_GREEN, dk ? 0.08 : 0.06),
-                                border: `1px solid ${alpha(G_GREEN, dk ? 0.2 : 0.15)}`,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                animation: `${fadeInUp} 0.25s ease both`,
-                            }}
+                        <div
+                            className={`mt-2.5 p-1.5 rounded-xl flex justify-between items-center border ${
+                                dk ? 'bg-primary-500/10 border-primary-500/20' : 'bg-primary-500/[0.06] border-primary-500/15'
+                            }`}
+                            style={{ animation: 'fadeInUpCrops 0.25s ease both' }}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                                <i
-                                    className="fa-solid fa-wheat-awn"
-                                    style={{ fontSize: '0.75rem', color: G_GREEN }}
-                                />
-                                <Typography
-                                    sx={{
-                                        fontFamily: font,
-                                        fontWeight: 700,
-                                        fontSize: '0.8rem',
-                                        color: dk ? DARK_HEAD : '#333',
-                                    }}
+                            <div className="flex items-center gap-[0.8]">
+                                <i className="fa-solid fa-wheat-awn text-[0.75rem] text-primary-500" />
+                                <span
+                                    className="font-bold text-[0.8rem]"
+                                    style={{ color: dk ? '#f8fafc' : '#333' }}
                                 >
                                     {loc('زكاة الزروع:', 'Crops Zakat:')}
-                                </Typography>
-                            </Box>
-                            <Typography
-                                sx={{
-                                    fontFamily: LATIN_FONT,
-                                    fontWeight: 800,
-                                    fontSize: '0.9rem',
-                                    color: G_GREEN,
-                                }}
-                            >
+                                </span>
+                            </div>
+                            <span className="font-extrabold text-[0.9rem] text-primary-500 font-latin">
                                 {cropsZakat.toFixed(1)} {loc('كجم', 'kg')}
-                            </Typography>
-                        </Box>
+                            </span>
+                        </div>
                     )}
-                </Box>
-            </Collapse>
-        </Box>
+                </div>
+            </div>
+        </div>
     );
 }

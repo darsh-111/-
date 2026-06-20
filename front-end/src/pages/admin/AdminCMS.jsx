@@ -1,26 +1,4 @@
-import { useState } from 'react';
-import {
-    Box,
-    Paper,
-    Typography,
-    TextField,
-    Button,
-    Grid,
-    Tab,
-    Tabs,
-    Divider,
-    Switch,
-    FormControlLabel,
-    InputAdornment,
-    Select,
-    MenuItem,
-    IconButton,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
-    Chip
-} from '@mui/material';
+import { useState, useEffect } from 'react';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useToast } from '../../components/common';
@@ -35,13 +13,15 @@ function TabPanel(props) {
             {...other}
         >
             {value === index && (
-                <Box sx={{ py: 3 }}>
+                <div className="py-6">
                     {children}
-                </Box>
+                </div>
             )}
         </div>
     );
 }
+
+const TABS = ['الشريط المتحرك', 'الصفحة الرئيسية', 'الآيات والرسائل', 'الإعلانات', 'من نحن وآراء المتبرعين', 'إحصائيات المنصة', 'المظهر (Theme)', 'إعدادات الزكاة'];
 
 export default function AdminCMS() {
     const { state, dispatch } = useAdminData();
@@ -73,7 +53,6 @@ export default function AdminCMS() {
         });
     };
 
-    // For top-level content keys (not nested in a section)
     const handleTopLevelChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
@@ -99,342 +78,485 @@ export default function AdminCMS() {
     };
 
     return (
-        <Box>
+        <div>
             <AdminPageHeader
                 title="إدارة المحتوى"
                 subtitle="التحكم في النصوص والإعلانات المعروضة في واجهة المتبرع"
             />
 
-            <Paper sx={{ mb: 4, borderRadius: 2 }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={tab} onChange={(e, v) => setTab(v)} aria-label="cms tabs">
-                        <Tab label="الشريط المتحرك" />
-                        <Tab label="الصفحة الرئيسية" />
-                        <Tab label="الآيات والرسائل" />
-                        <Tab label="الإعلانات" />
-                        <Tab label="من نحن وآراء المتبرعين" />
-                        <Tab label="إحصائيات المنصة" />
-                        <Tab label="المظهر (Theme)" />
-                        <Tab label="إعدادات الزكاة" />
-                    </Tabs>
-                </Box>
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card mb-8">
+                <div className="border-b border-neutral-200 dark:border-neutral-700">
+                    <div className="flex border-b border-neutral-200 dark:border-neutral-700 overflow-x-auto" role="tablist" aria-label="cms tabs">
+                        {TABS.map((label, i) => (
+                            <button
+                                key={i}
+                                role="tab"
+                                aria-selected={tab === i}
+                                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                    tab === i
+                                        ? 'border-primary-500 text-primary-500'
+                                        : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
+                                }`}
+                                onClick={() => setTab(i)}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                <Box sx={{ p: { xs: 2, md: 4 } }}>
+                <div className="p-4 md:p-8">
                     {/* Hero Slider Tab */}
                     <TabPanel value={tab} index={0}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">الشريط المتحرك (Hero Slider)</Typography>
-                            <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('heroSlides', { title: '', subtitle: '', image: '', ctaText: '', ctaLink: '/donate', ctaIcon: 'fa-solid fa-heart', active: true })}>
+                        <div className="flex justify-between mb-4">
+                            <h6 className="text-base font-bold">الشريط المتحرك (Hero Slider)</h6>
+                            <button className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2" onClick={() => handleAddArrayItem('heroSlides', { title: '', subtitle: '', image: '', ctaText: '', ctaLink: '/donate', ctaIcon: 'fa-solid fa-heart', active: true })}>
+                                <i className="fa-solid fa-plus" />
                                 إضافة شريحة
-                            </Button>
-                        </Box>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
+                            </button>
+                        </div>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
                             {(formData.heroSlides || []).length === 0 && (
-                                <Grid item xs={12}>
-                                    <Typography color="text.secondary" textAlign="center" py={4}>
+                                <div className="col-span-12">
+                                    <p className="text-neutral-500 dark:text-neutral-400 text-center py-8">
                                         لا توجد شرائح بعد. أضف أول شريحة لعرضها في واجهة البداية.
-                                    </Typography>
-                                </Grid>
+                                    </p>
+                                </div>
                             )}
                             {(formData.heroSlides || []).map((slide, index) => (
-                                <Grid item xs={12} key={slide.id}>
-                                    <Paper variant="outlined" sx={{ p: 2, position: 'relative' }}>
-                                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 8, left: 8 }} onClick={() => handleDeleteArrayItem('heroSlides', slide.id)}>
+                                <div className="col-span-12" key={slide.id}>
+                                    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg relative">
+                                        <button className="absolute top-2 left-2 p-1.5 rounded-md text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors" onClick={() => handleDeleteArrayItem('heroSlides', slide.id)}>
                                             <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12} md={8}>
-                                                <TextField fullWidth label="العنوان" value={slide.title} onChange={(e) => handleArrayChange('heroSlides', index, 'title', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={4}>
-                                                <TextField fullWidth label="رابط الزر (مثال: /donate)" value={slide.ctaLink || '/donate'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaLink', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                <TextField multiline rows={2} fullWidth label="النص الفرعي" value={slide.subtitle} onChange={(e) => handleArrayChange('heroSlides', index, 'subtitle', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField fullWidth label="نص الزر (مثال: تبرع الآن)" value={slide.ctaText} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaText', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField fullWidth label="أيقونة الزر (مثال: fa-solid fa-heart)" value={slide.ctaIcon || 'fa-solid fa-heart'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaIcon', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={10}>
-                                                <TextField fullWidth label="رابط صورة الخلفية (اختياري - URL)" value={slide.image || ''} onChange={(e) => handleArrayChange('heroSlides', index, 'image', e.target.value)} placeholder="https://example.com/image.jpg" />
-                                            </Grid>
-                                            <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <FormControlLabel control={<Switch checked={slide.active !== false} onChange={(e) => handleArrayChange('heroSlides', index, 'active', e.target.checked)} />} label="نشط" />
-                                            </Grid>
-                                        </Grid>
-                                    </Paper>
-                                </Grid>
+                                        </button>
+                                        <div className="grid grid-cols-12 gap-2">
+                                            <div className="col-span-12 md:col-span-8">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">العنوان</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={slide.title} onChange={(e) => handleArrayChange('heroSlides', index, 'title', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-4">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">رابط الزر (مثال: /donate)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={slide.ctaLink || '/donate'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaLink', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النص الفرعي</label>
+                                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={slide.subtitle} onChange={(e) => handleArrayChange('heroSlides', index, 'subtitle', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-6">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">نص الزر (مثال: تبرع الآن)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={slide.ctaText} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaText', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-6">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">أيقونة الزر (مثال: fa-solid fa-heart)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={slide.ctaIcon || 'fa-solid fa-heart'} onChange={(e) => handleArrayChange('heroSlides', index, 'ctaIcon', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-10">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">رابط صورة الخلفية (اختياري - URL)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={slide.image || ''} onChange={(e) => handleArrayChange('heroSlides', index, 'image', e.target.value)} placeholder="https://example.com/image.jpg" />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-2 flex items-center">
+                                                <label className="inline-flex items-center gap-2 cursor-pointer">
+                                                    <span className="relative inline-block w-10 h-5">
+                                                        <input type="checkbox" className="sr-only peer" checked={slide.active !== false} onChange={(e) => handleArrayChange('heroSlides', index, 'active', e.target.checked)} />
+                                                        <span className="absolute inset-0 bg-neutral-300 dark:bg-neutral-600 rounded-full peer-checked:bg-primary-500 transition-colors"></span>
+                                                        <span className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform"></span>
+                                                    </span>
+                                                    <span className="text-sm">نشط</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
-                        </Grid>
+                        </div>
                     </TabPanel>
 
                     {/* Homepage Tab */}
                     <TabPanel value={tab} index={1}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            واجهة البداية (Hero Banner)
-                        </Typography>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="العنوان الرئيسي"
-                                    value={formData.heroBanner.title}
-                                    onChange={(e) => handleChange('heroBanner', 'title', e.target.value)}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    label="النص الفرعي"
-                                    value={formData.heroBanner.subtitle}
-                                    onChange={(e) => handleChange('heroBanner', 'subtitle', e.target.value)}
-                                />
-                            </Grid>
-                        </Grid>
+                        <h6 className="text-base font-bold mb-2">واجهة البداية (Hero Banner)</h6>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
+                            <div className="col-span-12">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">العنوان الرئيسي</label>
+                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={formData.heroBanner.title} onChange={(e) => handleChange('heroBanner', 'title', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="col-span-12">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النص الفرعي</label>
+                                    <textarea rows={3} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.heroBanner.subtitle} onChange={(e) => handleChange('heroBanner', 'subtitle', e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
                     </TabPanel>
 
                     {/* Islamic Content Tab */}
                     <TabPanel value={tab} index={2}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">المحتوى الإسلامي (آيات وأحاديث)</Typography>
-                            <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('quranicVerses', { text: '', reference: '', active: true, type: 'quran' })}>
+                        <div className="flex justify-between mb-4">
+                            <h6 className="text-base font-bold">المحتوى الإسلامي (آيات وأحاديث)</h6>
+                            <button className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2" onClick={() => handleAddArrayItem('quranicVerses', { text: '', reference: '', active: true, type: 'quran' })}>
+                                <i className="fa-solid fa-plus" />
                                 إضافة جديد
-                            </Button>
-                        </Box>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
-                                <TextField select fullWidth label="طريقة العرض" value={formData.islamicDisplayMode || 'rotating'} onChange={(e) => handleTopLevelChange('islamicDisplayMode', e.target.value)}>
-                                    <MenuItem value="rotating">متناوب (تدوير)</MenuItem>
-                                    <MenuItem value="stacked">قائمة متتالية</MenuItem>
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField type="number" fullWidth label="مدة التناوب (ثواني)" value={formData.islamicRotationInterval || 5} onChange={(e) => handleTopLevelChange('islamicRotationInterval', Number(e.target.value))} disabled={formData.islamicDisplayMode !== 'rotating'} />
-                            </Grid>
+                            </button>
+                        </div>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">طريقة العرض</label>
+                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.islamicDisplayMode || 'rotating'} onChange={(e) => handleTopLevelChange('islamicDisplayMode', e.target.value)}>
+                                        <option value="rotating">متناوب (تدوير)</option>
+                                        <option value="stacked">قائمة متتالية</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">مدة التناوب (ثواني)</label>
+                                    <input type="number" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" value={formData.islamicRotationInterval || 5} onChange={(e) => handleTopLevelChange('islamicRotationInterval', Number(e.target.value))} disabled={formData.islamicDisplayMode !== 'rotating'} />
+                                </div>
+                            </div>
                             {formData.quranicVerses?.map((verse, index) => (
-                                <Grid item xs={12} key={verse.id}>
-                                    <Paper variant="outlined" sx={{ p: 2, position: 'relative' }}>
-                                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 8, left: 8 }} onClick={() => handleDeleteArrayItem('quranicVerses', verse.id)}>
+                                <div className="col-span-12" key={verse.id}>
+                                    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg relative">
+                                        <button className="absolute top-2 left-2 p-1.5 rounded-md text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors" onClick={() => handleDeleteArrayItem('quranicVerses', verse.id)}>
                                             <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12}>
-                                                <TextField fullWidth multiline rows={2} label="النص" value={verse.text} onChange={(e) => handleArrayChange('quranicVerses', index, 'text', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField fullWidth label="المرجع (مثال: سورة البقرة)" value={verse.reference} onChange={(e) => handleArrayChange('quranicVerses', index, 'reference', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField select fullWidth label="النوع" value={verse.type || 'quran'} onChange={(e) => handleArrayChange('quranicVerses', index, 'type', e.target.value)}>
-                                                    <MenuItem value="quran">قرآن كريم</MenuItem>
-                                                    <MenuItem value="hadith">حديث شريف</MenuItem>
-                                                    <MenuItem value="quote">مأثورات</MenuItem>
-                                                </TextField>
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                <FormControlLabel control={<Switch checked={verse.active} onChange={(e) => handleArrayChange('quranicVerses', index, 'active', e.target.checked)} />} label="نشط" />
-                                            </Grid>
-                                        </Grid>
-                                    </Paper>
-                                </Grid>
+                                        </button>
+                                        <div className="grid grid-cols-12 gap-2">
+                                            <div className="col-span-12">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النص</label>
+                                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={verse.text} onChange={(e) => handleArrayChange('quranicVerses', index, 'text', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-6">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">المرجع (مثال: سورة البقرة)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={verse.reference} onChange={(e) => handleArrayChange('quranicVerses', index, 'reference', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-6">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النوع</label>
+                                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={verse.type || 'quran'} onChange={(e) => handleArrayChange('quranicVerses', index, 'type', e.target.value)}>
+                                                        <option value="quran">قرآن كريم</option>
+                                                        <option value="hadith">حديث شريف</option>
+                                                        <option value="quote">مأثورات</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12">
+                                                <label className="inline-flex items-center gap-2 cursor-pointer">
+                                                    <span className="relative inline-block w-10 h-5">
+                                                        <input type="checkbox" className="sr-only peer" checked={verse.active} onChange={(e) => handleArrayChange('quranicVerses', index, 'active', e.target.checked)} />
+                                                        <span className="absolute inset-0 bg-neutral-300 dark:bg-neutral-600 rounded-full peer-checked:bg-primary-500 transition-colors"></span>
+                                                        <span className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform"></span>
+                                                    </span>
+                                                    <span className="text-sm">نشط</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
-                        </Grid>
+                        </div>
                     </TabPanel>
 
                     {/* Announcements Tab */}
                     <TabPanel value={tab} index={3}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">شريط الإعلانات والحملات</Typography>
-                            <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('announcements', { title: '', text: '', type: 'info', active: true, startDate: '', endDate: '' })}>
+                        <div className="flex justify-between mb-4">
+                            <h6 className="text-base font-bold">شريط الإعلانات والحملات</h6>
+                            <button className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2" onClick={() => handleAddArrayItem('announcements', { title: '', text: '', type: 'info', active: true, startDate: '', endDate: '' })}>
+                                <i className="fa-solid fa-plus" />
                                 إضافة إعلان
-                            </Button>
-                        </Box>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
+                            </button>
+                        </div>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
                             {formData.announcements?.map((ann, index) => (
-                                <Grid item xs={12} key={ann.id}>
-                                    <Paper variant="outlined" sx={{ p: 2, position: 'relative' }}>
-                                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 8, left: 8 }} onClick={() => handleDeleteArrayItem('announcements', ann.id)}>
+                                <div className="col-span-12" key={ann.id}>
+                                    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg relative">
+                                        <button className="absolute top-2 left-2 p-1.5 rounded-md text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors" onClick={() => handleDeleteArrayItem('announcements', ann.id)}>
                                             <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12} md={8}>
-                                                <TextField fullWidth label="نص الإعلان" value={ann.text} onChange={(e) => handleArrayChange('announcements', index, 'text', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={4}>
-                                                <TextField select fullWidth label="النوع" value={ann.type || 'info'} onChange={(e) => handleArrayChange('announcements', index, 'type', e.target.value)}>
-                                                    <MenuItem value="urgent">عاجل (أحمر)</MenuItem>
-                                                    <MenuItem value="info">معلومة (أزرق)</MenuItem>
-                                                    <MenuItem value="success">نجاح (أخضر)</MenuItem>
-                                                    <MenuItem value="seasonal">موسمي (ذهبي)</MenuItem>
-                                                </TextField>
-                                            </Grid>
-                                            <Grid item xs={12} md={4}>
-                                                <TextField type="date" InputLabelProps={{ shrink: true }} fullWidth label="تاريخ البدء" value={ann.startDate || ''} onChange={(e) => handleArrayChange('announcements', index, 'startDate', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={4}>
-                                                <TextField type="date" InputLabelProps={{ shrink: true }} fullWidth label="تاريخ الانتهاء" value={ann.endDate || ''} onChange={(e) => handleArrayChange('announcements', index, 'endDate', e.target.value)} />
-                                            </Grid>
-                                            <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <FormControlLabel control={<Switch checked={ann.active} onChange={(e) => handleArrayChange('announcements', index, 'active', e.target.checked)} />} label="مفعّل" />
-                                            </Grid>
-                                        </Grid>
-                                    </Paper>
-                                </Grid>
+                                        </button>
+                                        <div className="grid grid-cols-12 gap-2">
+                                            <div className="col-span-12 md:col-span-8">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">نص الإعلان</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={ann.text} onChange={(e) => handleArrayChange('announcements', index, 'text', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-4">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النوع</label>
+                                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={ann.type || 'info'} onChange={(e) => handleArrayChange('announcements', index, 'type', e.target.value)}>
+                                                        <option value="urgent">عاجل (أحمر)</option>
+                                                        <option value="info">معلومة (أزرق)</option>
+                                                        <option value="success">نجاح (أخضر)</option>
+                                                        <option value="seasonal">موسمي (ذهبي)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-4">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">تاريخ البدء</label>
+                                                    <input type="date" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={ann.startDate || ''} onChange={(e) => handleArrayChange('announcements', index, 'startDate', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-4">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">تاريخ الانتهاء</label>
+                                                    <input type="date" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={ann.endDate || ''} onChange={(e) => handleArrayChange('announcements', index, 'endDate', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12 md:col-span-4 flex items-center">
+                                                <label className="inline-flex items-center gap-2 cursor-pointer">
+                                                    <span className="relative inline-block w-10 h-5">
+                                                        <input type="checkbox" className="sr-only peer" checked={ann.active} onChange={(e) => handleArrayChange('announcements', index, 'active', e.target.checked)} />
+                                                        <span className="absolute inset-0 bg-neutral-300 dark:bg-neutral-600 rounded-full peer-checked:bg-primary-500 transition-colors"></span>
+                                                        <span className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform"></span>
+                                                    </span>
+                                                    <span className="text-sm">مفعّل</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
-                        </Grid>
+                        </div>
                     </TabPanel>
 
                     {/* About Us & Testimonials Tab */}
                     <TabPanel value={tab} index={4}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>من نحن</Typography>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3} sx={{ mb: 4 }}>
-                            <Grid item xs={12}><TextField multiline rows={2} fullWidth label="قصتنا" value={formData.aboutUs?.story || ''} onChange={(e) => handleChange('aboutUs', 'story', e.target.value)} /></Grid>
-                            <Grid item xs={12} md={4}><TextField multiline rows={2} fullWidth label="رؤيتنا" value={formData.aboutUs?.vision || ''} onChange={(e) => handleChange('aboutUs', 'vision', e.target.value)} /></Grid>
-                            <Grid item xs={12} md={4}><TextField multiline rows={2} fullWidth label="رسالتنا" value={formData.aboutUs?.mission || ''} onChange={(e) => handleChange('aboutUs', 'mission', e.target.value)} /></Grid>
-                            <Grid item xs={12} md={4}><TextField multiline rows={2} fullWidth label="قيمنا" value={formData.aboutUs?.values || ''} onChange={(e) => handleChange('aboutUs', 'values', e.target.value)} /></Grid>
-                        </Grid>
+                        <h6 className="text-base font-bold mb-2">من نحن</h6>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6 mb-8">
+                            <div className="col-span-12">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">قصتنا</label>
+                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.aboutUs?.story || ''} onChange={(e) => handleChange('aboutUs', 'story', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">رؤيتنا</label>
+                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.aboutUs?.vision || ''} onChange={(e) => handleChange('aboutUs', 'vision', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">رسالتنا</label>
+                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.aboutUs?.mission || ''} onChange={(e) => handleChange('aboutUs', 'mission', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">قيمنا</label>
+                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.aboutUs?.values || ''} onChange={(e) => handleChange('aboutUs', 'values', e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">آراء المتبرعين والمستفيدين</Typography>
-                            <Button variant="outlined" startIcon={<i className="fa-solid fa-plus" />} onClick={() => handleAddArrayItem('testimonials', { name: '', role: '', content: '', avatar: '' })}>إضافة رأي</Button>
-                        </Box>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
+                        <div className="flex justify-between mb-4">
+                            <h6 className="text-base font-bold">آراء المتبرعين والمستفيدين</h6>
+                            <button className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2" onClick={() => handleAddArrayItem('testimonials', { name: '', role: '', content: '', avatar: '' })}>
+                                <i className="fa-solid fa-plus" />
+                                إضافة رأي
+                            </button>
+                        </div>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
                             {formData.testimonials?.map((test, index) => (
-                                <Grid item xs={12} md={6} key={test.id}>
-                                    <Paper variant="outlined" sx={{ p: 2, position: 'relative' }}>
-                                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 8, left: 8 }} onClick={() => handleDeleteArrayItem('testimonials', test.id)}>
+                                <div className="col-span-12 md:col-span-6" key={test.id}>
+                                    <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg relative">
+                                        <button className="absolute top-2 left-2 p-1.5 rounded-md text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors" onClick={() => handleDeleteArrayItem('testimonials', test.id)}>
                                             <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12}><TextField fullWidth label="الاسم" value={test.name} onChange={(e) => handleArrayChange('testimonials', index, 'name', e.target.value)} /></Grid>
-                                            <Grid item xs={12}><TextField fullWidth label="الصفة (مثال: متبرع دائم)" value={test.role} onChange={(e) => handleArrayChange('testimonials', index, 'role', e.target.value)} /></Grid>
-                                            <Grid item xs={12}><TextField multiline rows={2} fullWidth label="النص" value={test.content} onChange={(e) => handleArrayChange('testimonials', index, 'content', e.target.value)} /></Grid>
-                                        </Grid>
-                                    </Paper>
-                                </Grid>
+                                        </button>
+                                        <div className="grid grid-cols-12 gap-2">
+                                            <div className="col-span-12">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">الاسم</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={test.name} onChange={(e) => handleArrayChange('testimonials', index, 'name', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">الصفة (مثال: متبرع دائم)</label>
+                                                    <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" value={test.role} onChange={(e) => handleArrayChange('testimonials', index, 'role', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="col-span-12">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">النص</label>
+                                                    <textarea rows={2} className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={test.content} onChange={(e) => handleArrayChange('testimonials', index, 'content', e.target.value)} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
-                        </Grid>
+                        </div>
                     </TabPanel>
 
                     {/* Stats Override Tab */}
                     <TabPanel value={tab} index={5}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">إحصائيات المنصة (الرئيسية)</Typography>
-                            <FormControlLabel control={<Switch checked={formData.statsConfig?.override || false} onChange={(e) => handleChange('statsConfig', 'override', e.target.checked)} />} label="استخدام أرقام يدوية (بدل الحساب التلقائي)" />
-                        </Box>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}><TextField type="number" fullWidth label="إجمالي التبرعات المكتوبة" value={formData.statsConfig?.totalDonations || 0} onChange={(e) => handleChange('statsConfig', 'totalDonations', Number(e.target.value))} disabled={!formData.statsConfig?.override} /></Grid>
-                            <Grid item xs={12} md={6}><TextField type="number" fullWidth label="عدد المستفيدين المكتوب" value={formData.statsConfig?.beneficiaries || 0} onChange={(e) => handleChange('statsConfig', 'beneficiaries', Number(e.target.value))} disabled={!formData.statsConfig?.override} /></Grid>
-                            <Grid item xs={12} md={6}><TextField type="number" fullWidth label="عدد المشاريع المكتوب" value={formData.statsConfig?.projects || 0} onChange={(e) => handleChange('statsConfig', 'projects', Number(e.target.value))} disabled={!formData.statsConfig?.override} /></Grid>
-                            <Grid item xs={12} md={6}><TextField type="number" fullWidth label="سنوات العطاء" value={formData.statsConfig?.years || 0} onChange={(e) => handleChange('statsConfig', 'years', Number(e.target.value))} disabled={!formData.statsConfig?.override} /></Grid>
-                        </Grid>
+                        <div className="flex justify-between mb-4">
+                            <h6 className="text-base font-bold">إحصائيات المنصة (الرئيسية)</h6>
+                            <label className="inline-flex items-center gap-2 cursor-pointer">
+                                <span className="relative inline-block w-10 h-5">
+                                    <input type="checkbox" className="sr-only peer" checked={formData.statsConfig?.override || false} onChange={(e) => handleChange('statsConfig', 'override', e.target.checked)} />
+                                    <span className="absolute inset-0 bg-neutral-300 dark:bg-neutral-600 rounded-full peer-checked:bg-primary-500 transition-colors"></span>
+                                    <span className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform"></span>
+                                </span>
+                                <span className="text-sm">استخدام أرقام يدوية (بدل الحساب التلقائي)</span>
+                            </label>
+                        </div>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">إجمالي التبرعات المكتوبة</label>
+                                    <input type="number" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" value={formData.statsConfig?.totalDonations || 0} onChange={(e) => handleChange('statsConfig', 'totalDonations', Number(e.target.value))} disabled={!formData.statsConfig?.override} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">عدد المستفيدين المكتوب</label>
+                                    <input type="number" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" value={formData.statsConfig?.beneficiaries || 0} onChange={(e) => handleChange('statsConfig', 'beneficiaries', Number(e.target.value))} disabled={!formData.statsConfig?.override} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">عدد المشاريع المكتوب</label>
+                                    <input type="number" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" value={formData.statsConfig?.projects || 0} onChange={(e) => handleChange('statsConfig', 'projects', Number(e.target.value))} disabled={!formData.statsConfig?.override} />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">سنوات العطاء</label>
+                                    <input type="number" className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed" value={formData.statsConfig?.years || 0} onChange={(e) => handleChange('statsConfig', 'years', Number(e.target.value))} disabled={!formData.statsConfig?.override} />
+                                </div>
+                            </div>
+                        </div>
                     </TabPanel>
 
                     {/* Theme Settings Tab */}
                     <TabPanel value={tab} index={6}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>المظهر العام والألوان</Typography>
-                        <Divider sx={{ mb: 3 }} />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
-                                <TextField type="color" fullWidth label="اللون الرئيسي (Primary Color)" value={themeData.primaryColor || '#00b16a'} onChange={(e) => handleThemeChange('primaryColor', e.target.value)} InputLabelProps={{ shrink: true }} />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField type="color" fullWidth label="اللون الثانوي (Secondary Color)" value={themeData.secondaryColor || '#f39c12'} onChange={(e) => handleThemeChange('secondaryColor', e.target.value)} InputLabelProps={{ shrink: true }} />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField select fullWidth label="حجم الخط" value={themeData.fontSize || 'normal'} onChange={(e) => handleThemeChange('fontSize', e.target.value)}>
-                                    <MenuItem value="small">صغير</MenuItem>
-                                    <MenuItem value="normal">متوسط (افتراضي)</MenuItem>
-                                    <MenuItem value="large">كبير</MenuItem>
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField select fullWidth label="انحناء الحواف (Border Radius)" value={themeData.borderRadius || 'medium'} onChange={(e) => handleThemeChange('borderRadius', e.target.value)}>
-                                    <MenuItem value="none">بدون انحناء</MenuItem>
-                                    <MenuItem value="small">صغير</MenuItem>
-                                    <MenuItem value="medium">متوسط</MenuItem>
-                                    <MenuItem value="large">دائري</MenuItem>
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField select fullWidth label="شكل واجهة البداية (Hero Style)" value={themeData.heroStyle || 'gradient'} onChange={(e) => handleThemeChange('heroStyle', e.target.value)}>
-                                    <MenuItem value="gradient">تدرج لوني</MenuItem>
-                                    <MenuItem value="image">صورة خلفية كاملة</MenuItem>
-                                    <MenuItem value="split">مقسم (نص وصورة)</MenuItem>
-                                </TextField>
-                            </Grid>
-                        </Grid>
+                        <h6 className="text-base font-bold mb-2">المظهر العام والألوان</h6>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="grid grid-cols-12 gap-6">
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">اللون الرئيسي (Primary Color)</label>
+                                    <input type="color" value={themeData.primaryColor || '#00b16a'} onChange={(e) => handleThemeChange('primaryColor', e.target.value)} className="w-full h-10 px-1 py-1 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent cursor-pointer" />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">اللون الثانوي (Secondary Color)</label>
+                                    <input type="color" value={themeData.secondaryColor || '#f39c12'} onChange={(e) => handleThemeChange('secondaryColor', e.target.value)} className="w-full h-10 px-1 py-1 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent cursor-pointer" />
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">حجم الخط</label>
+                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={themeData.fontSize || 'normal'} onChange={(e) => handleThemeChange('fontSize', e.target.value)}>
+                                        <option value="small">صغير</option>
+                                        <option value="normal">متوسط (افتراضي)</option>
+                                        <option value="large">كبير</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">انحناء الحواف (Border Radius)</label>
+                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={themeData.borderRadius || 'medium'} onChange={(e) => handleThemeChange('borderRadius', e.target.value)}>
+                                        <option value="none">بدون انحناء</option>
+                                        <option value="small">صغير</option>
+                                        <option value="medium">متوسط</option>
+                                        <option value="large">دائري</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="col-span-12">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">شكل واجهة البداية (Hero Style)</label>
+                                    <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={themeData.heroStyle || 'gradient'} onChange={(e) => handleThemeChange('heroStyle', e.target.value)}>
+                                        <option value="gradient">تدرج لوني</option>
+                                        <option value="image">صورة خلفية كاملة</option>
+                                        <option value="split">مقسم (نص وصورة)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </TabPanel>
 
                     {/* Zakat Tab */}
                     <TabPanel value={tab} index={7}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            إعدادات حساب الزكاة
-                        </Typography>
-                        <Divider sx={{ mb: 3 }} />
-                        <Box sx={{ mb: 4 }}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={formData.zakatConfig.useLiveApi !== false}
-                                        onChange={(e) => handleChange('zakatConfig', 'useLiveApi', e.target.checked)}
-                                    />
-                                }
-                                label="تحديث أسعار الذهب والفضة تلقائياً بالربط مع أسعار السوق العالمية (Live API)"
-                            />
-                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, mr: 4 }}>
+                        <h6 className="text-base font-bold mb-2">إعدادات حساب الزكاة</h6>
+                        <hr className="border-t border-neutral-200 dark:border-neutral-700 mb-6" />
+                        <div className="mb-8">
+                            <label className="inline-flex items-center gap-2 cursor-pointer">
+                                <span className="relative inline-block w-10 h-5">
+                                    <input type="checkbox" className="sr-only peer" checked={formData.zakatConfig.useLiveApi !== false} onChange={(e) => handleChange('zakatConfig', 'useLiveApi', e.target.checked)} />
+                                    <span className="absolute inset-0 bg-neutral-300 dark:bg-neutral-600 rounded-full peer-checked:bg-primary-500 transition-colors"></span>
+                                    <span className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform"></span>
+                                </span>
+                                <span className="text-sm">تحديث أسعار الذهب والفضة تلقائياً بالربط مع أسعار السوق العالمية (Live API)</span>
+                            </label>
+                            <span className="block text-xs text-neutral-500 dark:text-neutral-400 mt-1 mr-8">
                                 عند التفعيل، سيقوم النظام تلقائياً بجلب الأسعار اللحظية من الإنترنت. ستُستخدم الأسعار اليدوية بالأسفل كاحتياطي فقط في حال تعذر الاتصال بالخدمة.
-                            </Typography>
-                        </Box>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    type="number"
-                                    label={formData.zakatConfig.useLiveApi !== false ? "سعر جرام الذهب الاحتياطي (عيار 24)" : "سعر جرام الذهب المعتمد (عيار 24)"}
-                                    helperText={formData.zakatConfig.useLiveApi !== false ? "يُستخدم كاحتياطي في حال فشل جلب السعر الحي" : "السعر الثابت المستخدم في الحساب"}
-                                    value={formData.zakatConfig.goldPrice}
-                                    onChange={(e) => handleChange('zakatConfig', 'goldPrice', Number(e.target.value))}
-                                    InputProps={{
-                                        endAdornment: <InputAdornment position="end">ج.م</InputAdornment>,
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    fullWidth
-                                    type="number"
-                                    label={formData.zakatConfig.useLiveApi !== false ? "سعر جرام الفضة الاحتياطي" : "سعر جرام الفضة المعتمد"}
-                                    helperText={formData.zakatConfig.useLiveApi !== false ? "يُستخدم كاحتياطي في حال فشل جلب السعر الحي" : "السعر الثابت المستخدم في الحساب"}
-                                    value={formData.zakatConfig.silverPrice}
-                                    onChange={(e) => handleChange('zakatConfig', 'silverPrice', Number(e.target.value))}
-                                    InputProps={{
-                                        endAdornment: <InputAdornment position="end">ج.م</InputAdornment>,
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-12 gap-6">
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                        {formData.zakatConfig.useLiveApi !== false ? "سعر جرام الذهب الاحتياطي (عيار 24)" : "سعر جرام الذهب المعتمد (عيار 24)"}
+                                    </label>
+                                    <div className="relative">
+                                        <input type="number" value={formData.zakatConfig.goldPrice} onChange={(e) => handleChange('zakatConfig', 'goldPrice', Number(e.target.value))} className="w-full px-3 py-2.5 pl-12 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" />
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-neutral-500 dark:text-neutral-400 pointer-events-none">ج.م</span>
+                                    </div>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{formData.zakatConfig.useLiveApi !== false ? "يُستخدم كاحتياطي في حال فشل جلب السعر الحي" : "السعر الثابت المستخدم في الحساب"}</p>
+                                </div>
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                        {formData.zakatConfig.useLiveApi !== false ? "سعر جرام الفضة الاحتياطي" : "سعر جرام الفضة المعتمد"}
+                                    </label>
+                                    <div className="relative">
+                                        <input type="number" value={formData.zakatConfig.silverPrice} onChange={(e) => handleChange('zakatConfig', 'silverPrice', Number(e.target.value))} className="w-full px-3 py-2.5 pl-12 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" />
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-neutral-500 dark:text-neutral-400 pointer-events-none">ج.م</span>
+                                    </div>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{formData.zakatConfig.useLiveApi !== false ? "يُستخدم كاحتياطي في حال فشل جلب السعر الحي" : "السعر الثابت المستخدم في الحساب"}</p>
+                                </div>
+                            </div>
+                        </div>
                     </TabPanel>
-                </Box>
-            </Paper>
+                </div>
+            </div>
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button variant="contained" size="large" onClick={handleSave} sx={{ px: 4 }}>
+            <div className="flex justify-end">
+                <button className="bg-primary-500 text-white px-8 py-3 rounded-md font-semibold text-lg hover:bg-primary-600 transition-colors" onClick={handleSave}>
                     حفظ التغييرات
-                </Button>
-            </Box>
-        </Box>
+                </button>
+            </div>
+        </div>
     );
 }

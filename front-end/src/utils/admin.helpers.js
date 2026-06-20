@@ -16,9 +16,9 @@ export const STATUS_CONFIG = {
 };
 
 /**
- * Get MUI Chip color for a given status string
+ * Get Tailwind color for a given status
  * @param {string} status
- * @returns {string} MUI color key
+ * @returns {string} color key
  */
 export const getStatusColor = (status) =>
     STATUS_CONFIG[status]?.color || 'default';

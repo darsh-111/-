@@ -1,14 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Box, TextField, MenuItem, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, FormControl, Select } from '@mui/material';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AdminPageHeader, AdminStatsGrid, AdminFilterBar, AdminDataTable, AdminFormDialog } from '../../components/admin';
 import { beneficiariesList as initialBeneficiaries } from '../../data/adminMockData';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 import { t } from '../../i18n';
 import { countByStatus } from '../../utils/admin.helpers';
 
-/**
- * Admin Beneficiaries Page — Full CRUD + filter + search
- */
 function AdminBeneficiaries() {
     const { state, dispatch } = useAdminData();
     const beneficiaries = state.beneficiaries;
@@ -18,6 +14,13 @@ function AdminBeneficiaries() {
     const [search, setSearch] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, row: null });
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const emptyForm = { name: '', type: 'family', phone: '', nationalId: '', governorate: '', address: '', notes: '', program: '' };
     const [formData, setFormData] = useState(emptyForm);
@@ -107,23 +110,20 @@ function AdminBeneficiaries() {
         { key: 'program', label: t('admin.beneficiariesPage.program') },
         { key: 'cases', label: t('admin.beneficiariesPage.cases'), render: (v) => `${v} ${t('admin.beneficiariesPage.caseSuffix')}` },
         { key: 'location', label: t('admin.beneficiariesPage.location') },
-        { 
-            key: 'status', label: t('admin.beneficiariesPage.status'), 
+        {
+            key: 'status', label: t('admin.beneficiariesPage.status'),
             render: (val, row) => (
-                <FormControl size="small" variant="standard">
-                    <Select
-                        value={val || 'pending'}
-                        onChange={(e) => handleStatusChange(row, e.target.value)}
-                        disableUnderline
-                        sx={{ fontSize: '0.875rem', fontWeight: 'bold' }}
-                    >
-                        <MenuItem value="pending">قيد الانتظار</MenuItem>
-                        <MenuItem value="under_review">قيد المراجعة</MenuItem>
-                        <MenuItem value="active">معتمد</MenuItem>
-                        <MenuItem value="rejected">مرفوض</MenuItem>
-                        <MenuItem value="closed">مغلق</MenuItem>
-                    </Select>
-                </FormControl>
+                <select
+                    value={val || 'pending'}
+                    onChange={(e) => handleStatusChange(row, e.target.value)}
+                    className="text-sm font-bold bg-transparent border-0 outline-none cursor-pointer"
+                >
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="under_review">قيد المراجعة</option>
+                    <option value="active">معتمد</option>
+                    <option value="rejected">مرفوض</option>
+                    <option value="closed">مغلق</option>
+                </select>
             )
         },
     ];
@@ -139,7 +139,7 @@ function AdminBeneficiaries() {
     const updateField = (field) => (e) => setFormData(prev => ({ ...prev, [field]: e.target.value }));
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.beneficiariesPage.title')}
                 subtitle={t('admin.beneficiariesPage.subtitle')}
@@ -164,42 +164,55 @@ function AdminBeneficiaries() {
                 submitLabel={editItem ? t('admin.programsPage.saveChanges') : t('admin.beneficiariesPage.addBeneficiary')}
                 dividers
             >
-                <TextField label={t('admin.beneficiariesPage.fullName')} fullWidth required value={formData.name} onChange={updateField('name')} />
-                <TextField select label={t('admin.beneficiariesPage.typeLabel')} fullWidth value={formData.type} onChange={updateField('type')}>
-                    <MenuItem value="family">{t('admin.beneficiariesPage.family')}</MenuItem>
-                    <MenuItem value="individual">{t('admin.beneficiariesPage.individual')}</MenuItem>
-                </TextField>
-                <TextField select label={t('admin.beneficiariesPage.program')} fullWidth value={formData.program} onChange={updateField('program')}>
-                    {programOptions.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
-                </TextField>
-                <TextField label={t('admin.beneficiariesPage.phone')} fullWidth value={formData.phone} onChange={updateField('phone')} />
-                <TextField label={t('admin.beneficiariesPage.nationalId')} fullWidth value={formData.nationalId} onChange={updateField('nationalId')} />
-                <TextField select label={t('admin.beneficiariesPage.governorate')} fullWidth value={formData.governorate} onChange={updateField('governorate')}>
-                    <MenuItem value="" disabled>{t('admin.beneficiariesPage.selectGovernorate')}</MenuItem>
-                    {governorates.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-                </TextField>
-                <TextField label={t('admin.beneficiariesPage.address')} fullWidth value={formData.address} onChange={updateField('address')} />
-                <TextField label={t('admin.beneficiariesPage.notes')} multiline rows={3} fullWidth value={formData.notes} onChange={updateField('notes')} placeholder={t('admin.beneficiariesPage.notesPlaceholder')} />
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.beneficiariesPage.fullName')} required value={formData.name} onChange={updateField('name')} />
+                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.type} onChange={updateField('type')}>
+                    <option value="family">{t('admin.beneficiariesPage.family')}</option>
+                    <option value="individual">{t('admin.beneficiariesPage.individual')}</option>
+                </select>
+                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.program} onChange={updateField('program')}>
+                    {programOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.beneficiariesPage.phone')} value={formData.phone} onChange={updateField('phone')} />
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.beneficiariesPage.nationalId')} value={formData.nationalId} onChange={updateField('nationalId')} />
+                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={formData.governorate} onChange={updateField('governorate')}>
+                    <option value="" disabled>{t('admin.beneficiariesPage.selectGovernorate')}</option>
+                    {governorates.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.beneficiariesPage.address')} value={formData.address} onChange={updateField('address')} />
+                <textarea className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" rows={3} value={formData.notes} onChange={updateField('notes')} placeholder={t('admin.beneficiariesPage.notesPlaceholder')} />
             </AdminFormDialog>
 
-            {/* Delete Confirmation */}
-            <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, row: null })}>
-                <DialogTitle>تأكيد الحذف</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        هل أنت متأكد من حذف المستفيد "{deleteConfirm.row?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDeleteConfirm({ open: false, row: null })} color="inherit">إلغاء</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained">حذف نهائياً</Button>
-                </DialogActions>
-            </Dialog>
+            {deleteConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirm({ open: false, row: null })}></div>
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700">تأكيد الحذف</h2>
+                        <div className="p-4">
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                هل أنت متأكد من حذف المستفيد "{deleteConfirm.row?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+                            </p>
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button onClick={() => setDeleteConfirm({ open: false, row: null })} className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 rounded-md font-semibold transition-colors">إلغاء</button>
+                            <button onClick={confirmDelete} className="bg-error-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-error-600 transition-colors">حذف نهائياً</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg text-white ${
+                        snackbar.severity === 'success' ? 'bg-success-500' :
+                        snackbar.severity === 'error' ? 'bg-error-500' :
+                        snackbar.severity === 'warning' ? 'bg-warning-500' :
+                        'bg-primary-500'
+                    }`}>
+                        {snackbar.msg}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

@@ -1,259 +1,147 @@
-import { Box, Typography, TextField, InputAdornment, Collapse, useTheme, alpha } from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getLanguage, formatCurrency } from '../../i18n';
-import { keyframes } from '@emotion/react';
+import { useInjectStyles } from '../../utils/injectStyles';
 
-// ─── Design Tokens ───────────────────────────────────────────────
-const DARK_CARD = '#1e293b';
-const DARK_TEXT = '#e2e8f0';
-const DARK_HEAD = '#f8fafc';
-const ARABIC_FONT = "'Cairo', 'Tajawal', sans-serif";
-const LATIN_FONT = "'Inter', 'Manrope', sans-serif";
-
-// ─── Animations ──────────────────────────────────────────────────
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
-// ─── Hide number spinners ────────────────────────────────────────
-const noSpinnerSx = {
-    '& input[type=number]': { MozAppearance: 'textfield' },
-    '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-        WebkitAppearance: 'none', margin: 0,
-    },
-};
-
-// ─── Helpers ─────────────────────────────────────────────────────
 const loc = (ar, en) => (getLanguage() === 'en' ? en : ar);
 
-// ═════════════════════════════════════════════════════════════════
-//  CashCalculator
-// ═════════════════════════════════════════════════════════════════
+const cashStyles = `
+    @keyframes fadeInUpCash {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none; margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
+`;
 
 export default function CashCalculator({ value, onChange, zakatAmount, expanded, onToggle }) {
-    const theme = useTheme();
-    const dk = theme.palette.mode === 'dark';
-    const font = ARABIC_FONT;
-    const G_GREEN = theme.palette.primary.main;
-
-    // ── Shared input styling ──
-    const inputSx = {
-        ...noSpinnerSx,
-        '& .MuiOutlinedInput-root': {
-            borderRadius: '14px',
-            fontFamily: LATIN_FONT,
-            bgcolor: dk ? 'rgba(255,255,255,0.04)' : '#fafafa',
-            '& fieldset': { borderColor: dk ? 'rgba(255,255,255,0.10)' : '#e0e0e0' },
-            '&:hover fieldset': { borderColor: alpha(G_GREEN, 0.4) },
-            '&.Mui-focused fieldset': { borderColor: G_GREEN },
-        },
-        '& .MuiInputLabel-root': { fontFamily: font },
-    };
+    const { isDark: dk } = useTheme();
+    useInjectStyles(cashStyles, 'cash-styles');
 
     return (
-        <Box
-            sx={{
-                borderRadius: '20px',
-                bgcolor: dk ? DARK_CARD : '#fff',
-                border: `1px solid ${dk ? 'rgba(255,255,255,0.06)' : '#eef2f7'}`,
-                boxShadow: dk ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 16px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-                animation: `${fadeInUp} 0.35s ease both`,
-                transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
-                '&:hover': {
-                    boxShadow: dk ? '0 6px 28px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.08)',
-                },
-            }}
+        <div
+            className={`rounded-[20px] overflow-hidden transition-all duration-300 border ${
+                dk
+                    ? 'bg-[#1e293b] shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-white/5 hover:shadow-[0_6px_28px_rgba(0,0,0,0.4)]'
+                    : 'bg-white shadow-[0_2px_16px_rgba(0,0,0,0.05)] border-[#eef2f7] hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)]'
+            }`}
+            style={{ animation: 'fadeInUpCash 0.35s ease both' }}
         >
-            {/* ═══ HEADER (Clickable) ═══ */}
-            <Box
+            {/* HEADER */}
+            <div
                 onClick={onToggle}
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: { xs: 2, md: 3 },
-                    py: { xs: 1.8, md: 2.2 },
-                    cursor: 'pointer',
-                    transition: 'background 0.2s ease',
-                    userSelect: 'none',
-                    '&:hover': {
-                        bgcolor: dk ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)',
-                    },
-                }}
+                className={`flex items-center gap-1.5 px-4 md:px-6 py-[1.1rem] md:py-[1.35rem] cursor-pointer select-none transition-colors duration-200 ${
+                    dk ? 'hover:bg-white/[0.03]' : 'hover:bg-black/[0.015]'
+                }`}
             >
                 {/* Green circle icon */}
-                <Box
-                    sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: '50%',
-                        bgcolor: alpha(G_GREEN, dk ? 0.15 : 0.1),
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'transform 0.25s ease',
-                        '&:hover': { transform: 'scale(1.05)' },
-                    }}
+                <div
+                    className={`w-[42px] h-[42px] rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 hover:scale-105 ${
+                        dk ? 'bg-primary-500/15' : 'bg-primary-500/10'
+                    }`}
                 >
-                    <i
-                        className="fa-solid fa-money-bill-wave"
-                        style={{ fontSize: '1rem', color: G_GREEN }}
-                    />
-                </Box>
+                    <i className="fa-solid fa-money-bill-wave text-primary-500" style={{ fontSize: '1rem' }} />
+                </div>
 
                 {/* Title */}
-                <Typography
-                    sx={{
-                        fontFamily: font,
-                        fontWeight: 800,
-                        fontSize: '1.1rem',
-                        color: dk ? DARK_HEAD : '#1a1a1a',
-                        flex: 1,
-                    }}
+                <h3
+                    className="flex-1 font-extrabold text-[1.1rem]"
+                    style={{ color: dk ? '#f8fafc' : '#1a1a1a' }}
                 >
                     {loc('النقود والأموال السائلة', 'Cash & Liquid Assets')}
-                </Typography>
+                </h3>
 
                 {/* Zakat badge */}
                 {zakatAmount > 0 && (
-                    <Box
-                        sx={{
-                            px: 1.5,
-                            py: 0.35,
-                            borderRadius: '20px',
-                            bgcolor: alpha(G_GREEN, dk ? 0.15 : 0.1),
-                            border: `1px solid ${alpha(G_GREEN, 0.25)}`,
-                            flexShrink: 0,
-                        }}
+                    <div
+                        className={`shrink-0 px-1.5 py-[0.35rem] rounded-full border ${
+                            dk ? 'bg-primary-500/15 border-primary-500/25' : 'bg-primary-500/10 border-primary-500/25'
+                        }`}
                     >
-                        <Typography
-                            sx={{
-                                fontFamily: LATIN_FONT,
-                                fontWeight: 700,
-                                fontSize: '0.75rem',
-                                color: G_GREEN,
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
+                        <span className="font-bold text-[0.75rem] whitespace-nowrap text-primary-500 font-latin">
                             {formatCurrency(zakatAmount)}
-                        </Typography>
-                    </Box>
+                        </span>
+                    </div>
                 )}
 
                 {/* Chevron */}
-                <Box
-                    sx={{
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                <div
+                    className="shrink-0 flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    style={{
                         transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                        color: dk ? alpha(DARK_TEXT, 0.4) : '#bbb',
+                        color: dk ? 'rgba(226,232,240,0.4)' : '#bbb',
                         fontSize: '0.85rem',
                     }}
                 >
                     <i className="fa-solid fa-chevron-down" />
-                </Box>
-            </Box>
+                </div>
+            </div>
 
-            {/* ═══ COLLAPSIBLE BODY ═══ */}
-            <Collapse in={expanded} timeout={350} easing="cubic-bezier(0.4,0,0.2,1)">
-                <Box
-                    sx={{
-                        px: { xs: 2, md: 3 },
-                        pb: { xs: 2.5, md: 3 },
-                        pt: 0.5,
-                    }}
-                >
+            {/* BODY */}
+            <div
+                className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    expanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+            >
+                <div className="px-4 md:px-6 pb-5 md:pb-6 pt-1">
                     {/* Description */}
-                    <Typography
-                        sx={{
-                            fontFamily: font,
-                            fontSize: '0.8rem',
-                            color: dk ? alpha(DARK_TEXT, 0.6) : '#888',
-                            mb: 3,
-                            lineHeight: 1.7,
-                        }}
+                    <p
+                        className="text-[0.8rem] mb-3 leading-relaxed"
+                        style={{ color: dk ? 'rgba(226,232,240,0.6)' : '#888' }}
                     >
                         {loc(
                             'أدخل إجمالي المبالغ النقدية، المدخرات البنكية، والأموال السائلة التي حال عليها الحول.',
                             'Enter the total of cash, bank savings, and liquid assets held for a full lunar year.'
                         )}
-                    </Typography>
+                    </p>
 
                     {/* Amount Input */}
-                    <TextField
-                        placeholder={loc('أدخل المبلغ', 'Enter amount')}
-                        type="number"
-                        fullWidth
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Typography
-                                        sx={{
-                                            fontFamily: font,
-                                            fontSize: '0.85rem',
-                                            color: dk ? alpha(DARK_TEXT, 0.5) : '#999',
-                                        }}
-                                    >
-                                        {loc('ج.م', 'EGP')}
-                                    </Typography>
-                                </InputAdornment>
-                            ),
-                        }}
-                        sx={{ ...inputSx, maxWidth: 500 }}
-                    />
+                    <div className="relative max-w-[500px]">
+                        <input
+                            placeholder={loc('أدخل المبلغ', 'Enter amount')}
+                            type="number"
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            className={`w-full px-3 py-2.5 border rounded-xl bg-transparent focus:ring-2 focus:ring-primary-500 outline-none transition-colors font-latin text-[0.95rem] ${
+                                dk
+                                    ? 'border-white/10 bg-white/5 hover:border-primary-500/40 focus:border-primary-500'
+                                    : 'border-[#e0e0e0] bg-[#fafafa] hover:border-primary-500/40 focus:border-primary-500'
+                            }`}
+                        />
+                        <span
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem] pointer-events-none"
+                            style={{ color: dk ? 'rgba(226,232,240,0.5)' : '#999' }}
+                        >
+                            {loc('ج.م', 'EGP')}
+                        </span>
+                    </div>
 
                     {/* Inline Preview */}
                     {parseFloat(value) > 0 && (
-                        <Box
-                            sx={{
-                                mt: 2.5,
-                                p: 1.5,
-                                borderRadius: '12px',
-                                bgcolor: alpha(G_GREEN, dk ? 0.08 : 0.06),
-                                border: `1px solid ${alpha(G_GREEN, dk ? 0.2 : 0.15)}`,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                animation: `${fadeInUp} 0.25s ease both`,
-                            }}
+                        <div
+                            className={`mt-2.5 p-1.5 rounded-xl flex justify-between items-center border ${
+                                dk ? 'bg-primary-500/10 border-primary-500/20' : 'bg-primary-500/[0.06] border-primary-500/15'
+                            }`}
+                            style={{ animation: 'fadeInUpCash 0.25s ease both' }}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                                <i
-                                    className="fa-solid fa-calculator"
-                                    style={{ fontSize: '0.75rem', color: G_GREEN }}
-                                />
-                                <Typography
-                                    sx={{
-                                        fontFamily: font,
-                                        fontWeight: 700,
-                                        fontSize: '0.8rem',
-                                        color: dk ? DARK_HEAD : '#333',
-                                    }}
+                            <div className="flex items-center gap-[0.8]">
+                                <i className="fa-solid fa-calculator text-[0.75rem] text-primary-500" />
+                                <span
+                                    className="font-bold text-[0.8rem]"
+                                    style={{ color: dk ? '#f8fafc' : '#333' }}
                                 >
                                     {loc('الزكاة المستحقة:', 'Zakat due:')}
-                                </Typography>
-                            </Box>
-                            <Typography
-                                sx={{
-                                    fontFamily: LATIN_FONT,
-                                    fontWeight: 800,
-                                    fontSize: '0.9rem',
-                                    color: G_GREEN,
-                                }}
-                            >
+                                </span>
+                            </div>
+                            <span className="font-extrabold text-[0.9rem] text-primary-500 font-latin">
                                 {formatCurrency(zakatAmount)}
-                            </Typography>
-                        </Box>
+                            </span>
+                        </div>
                     )}
-                </Box>
-            </Collapse>
-        </Box>
+                </div>
+            </div>
+        </div>
     );
 }

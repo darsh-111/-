@@ -1,24 +1,21 @@
-import { useState } from 'react';
-import {
-    Box, Grid, Card, CardContent, Typography, Button,
-    List, ListItem, ListItemText, ListItemAvatar, Chip,
-    useTheme, alpha, Snackbar, Alert
-} from '@mui/material';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader, AdminStatsGrid, AdminIconBox } from '../../components/admin';
 import { t, formatCurrency, formatNumber } from '../../i18n';
 import { recentReports, reportTypes } from '../../data/adminMockData';
-
 import { useAdminData } from '../../contexts/AdminDataContext';
 
-/**
- * Admin Reports Page — with working create/view/download buttons
- */
 function AdminReports() {
-    const theme = useTheme();
     const { state } = useAdminData();
     const dashboardStats = state.dashboardStats || {};
     const [reports, setReports] = useState(recentReports || []);
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const quickStats = [
         { label: t('admin.reportsPage.totalDonations'), value: formatCurrency(dashboardStats.totalDonations || 0), icon: 'fa-solid fa-coins', color: 'success' },
@@ -96,7 +93,7 @@ function AdminReports() {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.reportsPage.title')}
                 subtitle={t('admin.reportsPage.subtitle')}
@@ -106,87 +103,81 @@ function AdminReports() {
             <AdminStatsGrid stats={quickStats} columns={3} />
 
             {/* Report Types - Quick Create */}
-            <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                    <Typography variant="h6" fontWeight="bold">{t('admin.reportsPage.quickCreate')}</Typography>
-                </Box>
-                <CardContent>
-                    <Grid container spacing={2}>
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700">
+                <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <h6 className="text-base font-bold">{t('admin.reportsPage.quickCreate')}</h6>
+                </div>
+                <div className="p-4">
+                    <div className="grid grid-cols-12 gap-4">
                         {reportTypes.map((rt, i) => (
-                            <Grid item xs={12} sm={6} md={3} key={i}>
-                                <Card
-                                    elevation={0}
+                            <div className="col-span-12 sm:col-span-6 md:col-span-3" key={i}>
+                                <div
                                     onClick={() => handleCreateReport(rt)}
-                                    sx={{
-                                        border: 1, borderColor: 'divider', p: 2, cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        '&:hover': {
-                                            borderColor: `${rt.color}.main`,
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: `0 4px 12px ${alpha(theme.palette[rt.color]?.main || theme.palette.primary.main, 0.15)}`,
-                                        },
-                                    }}
+                                    className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-100 dark:border-neutral-700 p-4 cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-300"
                                 >
                                     <AdminIconBox icon={rt.icon} color={rt.color} size={44} />
-                                    <Typography variant="body1" fontWeight="bold" sx={{ mt: 1.5 }}>{rt.title}</Typography>
-                                    <Typography variant="caption" color="text.secondary">{rt.desc}</Typography>
-                                    <Button size="small" color={rt.color} sx={{ mt: 1, p: 0, minWidth: 0, fontWeight: 'bold' }}>
+                                    <p className="font-bold mt-3">{rt.title}</p>
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">{rt.desc}</span>
+                                    <button className="block text-xs font-bold p-0 mt-1 text-primary-500">
                                         {t('admin.reportsPage.create')} <i className="fa-solid fa-arrow-left" style={{ marginInlineEnd: 4 }} />
-                                    </Button>
-                                </Card>
-                            </Grid>
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
-                </CardContent>
-            </Card>
+                    </div>
+                </div>
+            </div>
 
             {/* Recent Reports */}
-            <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight="bold">{t('admin.reportsPage.recentReports')}</Typography>
-                    <Chip label={reports.length} size="small" color="primary" variant="outlined" />
-                </Box>
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700">
+                <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
+                    <h6 className="text-base font-bold">{t('admin.reportsPage.recentReports')}</h6>
+                    <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium border border-primary-500 text-primary-500">
+                        {reports.length}
+                    </span>
+                </div>
                 {reports.length === 0 ? (
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography color="text.secondary">لا توجد تقارير</Typography>
-                    </Box>
+                    <div className="p-8 text-center">
+                        <p className="text-neutral-500 dark:text-neutral-400">لا توجد تقارير</p>
+                    </div>
                 ) : (
-                    <List disablePadding>
+                    <div>
                         {reports.map((report, i) => (
-                            <ListItem
-                                key={report.id}
-                                divider={i !== reports.length - 1}
-                                secondaryAction={
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                        <Button size="small" variant="outlined" onClick={() => handleViewReport(report)}>{t('admin.reportsPage.view')}</Button>
-                                        <Button size="small" variant="outlined" color="inherit" onClick={() => handleDownloadReport(report)}>{t('admin.reportsPage.download')}</Button>
-                                        <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteReport(report.id)}><i className="fa-solid fa-trash" style={{ fontSize: 12 }} /></Button>
-                                    </Box>
-                                }
-                            >
-                                <ListItemAvatar>
-                                    <AdminIconBox icon={report.icon} color={report.color} size={40} />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={report.title}
-                                    primaryTypographyProps={{ fontWeight: 'medium' }}
-                                    secondary={
-                                        <Box component="span" sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5 }}>
-                                            <Chip label={report.period} size="small" variant="outlined" />
-                                            <Typography variant="caption" color="text.secondary">{t('admin.reportsPage.createdOn')}: {report.generated}</Typography>
-                                        </Box>
-                                    }
-                                />
-                            </ListItem>
+                            <div key={report.id} className={`flex items-center gap-3 p-3 ${i !== reports.length - 1 ? 'border-b border-neutral-200 dark:border-neutral-700' : ''}`}>
+                                <AdminIconBox icon={report.icon} color={report.color} size={40} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{report.title}</p>
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300">
+                                            {report.period}
+                                        </span>
+                                        <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('admin.reportsPage.createdOn')}: {report.generated}</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1 shrink-0">
+                                    <button className="border border-primary-500 text-primary-500 px-3 py-1 rounded-md text-xs font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors" onClick={() => handleViewReport(report)}>{t('admin.reportsPage.view')}</button>
+                                    <button className="border border-neutral-400 text-neutral-600 dark:text-neutral-300 px-3 py-1 rounded-md text-xs font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors" onClick={() => handleDownloadReport(report)}>{t('admin.reportsPage.download')}</button>
+                                    <button className="border border-error-500 text-error-500 px-2 py-1 rounded-md text-xs hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors" onClick={() => handleDeleteReport(report.id)}><i className="fa-solid fa-trash" style={{ fontSize: 12 }} /></button>
+                                </div>
+                            </div>
                         ))}
-                    </List>
+                    </div>
                 )}
-            </Card>
+            </div>
 
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg text-white ${
+                        snackbar.severity === 'success' ? 'bg-success-500' :
+                        snackbar.severity === 'error' ? 'bg-error-500' :
+                        snackbar.severity === 'warning' ? 'bg-warning-500' :
+                        'bg-primary-500'
+                    }`}>
+                        {snackbar.msg}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

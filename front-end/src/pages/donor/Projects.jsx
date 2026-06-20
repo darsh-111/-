@@ -1,79 +1,21 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    CardMedia,
-    Button,
-    TextField,
-    MenuItem,
-    InputAdornment,
-    LinearProgress,
-    Chip,
-    Stack,
-    useTheme,
-    alpha
-} from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { t, formatNumber } from '../../i18n';
 import { useAdminData } from '../../contexts/AdminDataContext';
-import styled from '@emotion/styled';
-
-// --- Styled Components ---
-
-const FilterBar = styled(Box)(({ theme }) => ({
-    marginBottom: theme.spacing(4),
-    display: 'flex',
-    gap: theme.spacing(2),
-    flexWrap: 'wrap',
-    [theme.breakpoints.down('md')]: {
-        flexDirection: 'column',
-    },
-}));
-
-const ProjectCard = styled(Card)(({ theme }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    borderRadius: theme.shape.borderRadius * 2,
-    overflow: 'hidden',
-    '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: theme.shadows[8],
-    },
-    [theme.breakpoints.up('md')]: {
-        flexDirection: 'row',
-        height: 280,
-    },
-}));
-
-const ProjectImage = styled(CardMedia)(({ theme }) => ({
-    height: 200,
-    [theme.breakpoints.up('md')]: {
-        height: '100%',
-        width: 320,
-        flexShrink: 0,
-    },
-}));
 
 function Projects() {
-    const theme = useTheme();
+    const { isDark } = useTheme();
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedProgram, setSelectedProgram] = useState(searchParams.get('program') || 'all');
     const [sortBy, setSortBy] = useState('newest');
 
-    // Read live data from shared context
     const { state } = useAdminData();
     const activePrograms = state.programs?.filter(p => !p.status || p.status === 'active') || [];
-    const projects = state.projects;       // live projects list
-    const programs = activePrograms;       // only active programs
+    const projects = state.projects;
+    const programs = activePrograms;
 
-    // Filter projects
     const filteredProjects = projects.filter(project => {
         const matchesSearch = project.title.includes(searchQuery) ||
             project.description.includes(searchQuery);
@@ -82,189 +24,141 @@ function Projects() {
         return matchesSearch && matchesProgram;
     });
 
-    // Sort projects
     const sortedProjects = [...filteredProjects].sort((a, b) => {
         switch (sortBy) {
             case 'mostFunded':
                 return (b.raised / b.goal) - (a.raised / a.goal);
             case 'endingSoon':
                 return a.daysLeft - b.daysLeft;
-            default: // newest
+            default:
                 return b.id - a.id;
         }
     });
 
     return (
-        <Box sx={{ py: 8, minHeight: '80vh' }}>
-            <Container>
-                {/* Page Header */}
-                <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ mb: 4 }}>
-                    {t('projects.title')}
-                </Typography>
+        <div className="py-8 min-h-[80vh]">
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+                <h1 className="text-3xl font-bold mb-4">{t('projects.title')}</h1>
 
-                {/* Filters Bar */}
-                <FilterBar>
-                    <TextField
-                        placeholder={t('projects.searchPlaceholder')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        fullWidth
-                        sx={{ flex: { md: 2 } }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <i className="fa-solid fa-magnifying-glass"></i>
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
+                <div className="mb-4 flex gap-2 flex-wrap md:flex-nowrap">
+                    <div className="relative flex-[2]">
+                        <i className="fa-solid fa-magnifying-glass absolute top-1/2 -translate-y-1/2 right-3 text-neutral-400"></i>
+                        <input
+                            placeholder={t('projects.searchPlaceholder')}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pr-10 pl-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
+                        />
+                    </div>
 
-                    <TextField
-                        select
+                    <select
                         value={selectedProgram}
                         onChange={(e) => setSelectedProgram(e.target.value)}
-                        sx={{ flex: { md: 1 }, minWidth: 200 }}
+                        className="w-full md:flex-1 min-w-[200px] px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
                     >
-                        <MenuItem value="all">{t('projects.allPrograms')}</MenuItem>
+                        <option value="all">{t('projects.allPrograms')}</option>
                         {programs.map(program => (
-                            <MenuItem key={program.id} value={program.id}>{program.name}</MenuItem>
+                            <option key={program.id} value={program.id}>{program.name}</option>
                         ))}
-                    </TextField>
+                    </select>
 
-                    <TextField
-                        select
+                    <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        sx={{ flex: { md: 1 }, minWidth: 200 }}
+                        className="w-full md:flex-1 min-w-[200px] px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
                     >
-                        <MenuItem value="newest">{t('projects.newest')}</MenuItem>
-                        <MenuItem value="mostFunded">{t('projects.mostFunded')}</MenuItem>
-                        <MenuItem value="endingSoon">{t('projects.endingSoon')}</MenuItem>
-                    </TextField>
-                </FilterBar>
+                        <option value="newest">{t('projects.newest')}</option>
+                        <option value="mostFunded">{t('projects.mostFunded')}</option>
+                        <option value="endingSoon">{t('projects.endingSoon')}</option>
+                    </select>
+                </div>
 
-                {/* Results */}
                 {sortedProjects.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 8 }}>
-                        <Typography variant="h2" sx={{ mb: 2 }}>🔍</Typography>
-                        <Typography variant="h5" gutterBottom>{t('states.noSearchResults')}</Typography>
-                        <Typography color="text.secondary" paragraph>{t('projects.noResults')}</Typography>
-                        <Button
-                            variant="outlined"
+                    <div className="text-center py-8">
+                        <h2 className="text-4xl mb-2">🔍</h2>
+                        <h5 className="text-lg mb-1">{t('states.noSearchResults')}</h5>
+                        <p className="text-neutral-500 dark:text-neutral-400 mb-4">{t('projects.noResults')}</p>
+                        <button
                             onClick={() => { setSearchQuery(''); setSelectedProgram('all'); }}
+                            className="border border-primary-500 text-primary-500 px-5 py-2 rounded-md font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                         >
                             {t('common.viewAll')}
-                        </Button>
-                    </Box>
+                        </button>
+                    </div>
                 ) : (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-12 gap-3">
                         {sortedProjects.map(project => (
-                            <Grid item xs={12} key={project.id}>
-                                <ProjectListCard project={project} />
-                            </Grid>
+                            <div className="col-span-12" key={project.id}>
+                                <ProjectListCard project={project} isDark={isDark} />
+                            </div>
                         ))}
-                    </Grid>
+                    </div>
                 )}
-            </Container>
-        </Box>
+            </div>
+        </div>
     );
 }
 
-/**
- * Project List Card (horizontal layout)
- */
-function ProjectListCard({ project }) {
-    const theme = useTheme();
+function ProjectListCard({ project, isDark }) {
     const progress = Math.min(100, Math.round((project.raised / project.goal) * 100));
 
     return (
-        <ProjectCard>
-            <Box sx={{ position: 'relative' }}>
-                <ProjectImage
-                    image={project.image}
-                    title={project.title}
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-card border border-neutral-100 dark:border-neutral-700 flex flex-col md:flex-row h-auto md:h-[280px] overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <div className="relative md:h-full md:w-80 shrink-0">
+                <img
+                    className="w-full h-48 md:h-full object-cover"
+                    src={project.image}
+                    alt={project.title}
                 />
-                <Chip
-                    label={project.program}
-                    size="small"
-                    color="primary"
-                    sx={{
-                        position: 'absolute',
-                        top: 16,
-                        left: 16,
-                        fontWeight: 'bold',
-                        boxShadow: theme.shadows[2]
-                    }}
-                />
-            </Box>
+                <span className="absolute top-4 left-4 inline-flex px-2 py-0.5 rounded text-xs font-medium bg-primary-500 text-white shadow-md">
+                    {project.program}
+                </span>
+            </div>
 
-            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
-                    <Typography
-                        variant="h5"
-                        fontWeight="bold"
-                        component={Link}
+            <div className="p-4 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-1">
+                    <Link
                         to={`/projects/${project.id}`}
-                        sx={{
-                            textDecoration: 'none',
-                            color: 'text.primary',
-                            '&:hover': { color: 'primary.main' }
-                        }}
+                        className="text-xl font-bold hover:text-primary-500 transition-colors no-underline text-inherit"
                     >
                         {project.title}
-                    </Typography>
-                </Stack>
+                    </Link>
+                </div>
 
-                <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                    }}
-                >
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 line-clamp-2">
                     {project.description}
-                </Typography>
+                </p>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 3, fontSize: '0.875rem' }}>
+                <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 text-sm mb-3">
                     <i className="fa-solid fa-location-dot"></i>
                     {project.location}
-                </Box>
+                </div>
 
-                <Box sx={{ mt: 'auto' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="body2" fontWeight="bold" color="primary.main">
-                            {progress}%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                <div className="mt-auto">
+                    <div className="flex justify-between mb-1">
+                        <span className="text-sm font-bold text-primary-500">{progress}%</span>
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
                             {t('projects.daysLeft')}: <strong>{project.daysLeft}</strong>
-                        </Typography>
-                    </Box>
-                    <LinearProgress
-                        variant="determinate"
-                        value={progress}
-                        sx={{ height: 8, borderRadius: 4, mb: 2 }}
-                    />
+                        </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden mb-2">
+                        <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${progress}%` }}></div>
+                    </div>
 
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2" color="text.secondary">
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
                             <strong>{formatNumber(project.donors)}</strong> {t('projects.donors')}
-                        </Typography>
-                        <Button
-                            component={Link}
+                        </span>
+                        <Link
                             to={`/projects/${project.id}`}
-                            variant="contained"
-                            disableElevation
+                            className="bg-primary-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-primary-600 transition-colors"
                         >
                             {t('common.donate')}
-                        </Button>
-                    </Stack>
-                </Box>
-            </CardContent>
-        </ProjectCard>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

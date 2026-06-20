@@ -1,74 +1,39 @@
-import { Box, Typography, Button, Stack } from '@mui/material';
-
 function AdminPageHeader({ title, subtitle, action, secondaryAction, children }) {
-    return (
-        <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: 3,
-            mb: 3
-        }}>
-            <Box>
-                <Typography variant="h4" component="h1" sx={{
-                    fontWeight: '700',
-                    fontSize: '1.75rem',
-                    lineHeight: 1.3,
-                    mb: 0.5,
-                    color: 'text.primary'
-                }}>
-                    {title}
-                </Typography>
-                {subtitle && (
-                    <Typography variant="body2" sx={{
-                        color: 'text.secondary',
-                        fontWeight: '500',
-                        fontSize: '0.9rem'
-                    }}>
-                        {subtitle}
-                    </Typography>
-                )}
-            </Box>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexShrink: 0 }}>
-                {children}
-                {secondaryAction && (
-                    <Button
-                        variant={secondaryAction.variant || 'outlined'}
-                        color={secondaryAction.color || 'inherit'}
-                        onClick={secondaryAction.onClick}
-                        startIcon={secondaryAction.icon && <i className={secondaryAction.icon} />}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: '600',
-                            fontSize: '0.9rem',
-                            borderRadius: 1,
-                            borderColor: 'divider'
-                        }}
-                    >
-                        {secondaryAction.label}
-                    </Button>
-                )}
-                {action && (
-                    <Button
-                        variant={action.variant || 'contained'}
-                        color={action.color || 'secondary'}
-                        onClick={action.onClick}
-                        startIcon={action.icon && <i className={action.icon} />}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: '600',
-                            fontSize: '0.9rem',
-                            borderRadius: 1,
-                            px: 3
-                        }}
-                    >
-                        {action.label}
-                    </Button>
-                )}
-            </Stack>
-        </Box>
-    );
+  return (
+    <div className="flex justify-between items-start flex-wrap gap-6 mb-6">
+      <div>
+        <h1 className="font-bold text-[1.75rem] leading-tight mb-1 text-neutral-900 dark:text-neutral-100">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="flex gap-1.5 items-center flex-shrink-0">
+        {children}
+        {secondaryAction && (
+          <button
+            onClick={secondaryAction.onClick}
+            className="border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 px-5 py-2 rounded-md font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm"
+          >
+            {secondaryAction.icon && <i className={`${secondaryAction.icon} ml-1.5`} />}
+            {secondaryAction.label}
+          </button>
+        )}
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="bg-secondary-500 text-white px-6 py-2 rounded-md font-semibold hover:bg-secondary-600 transition-colors text-sm"
+          >
+            {action.icon && <i className={`${action.icon} ml-1.5`} />}
+            {action.label}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default AdminPageHeader;

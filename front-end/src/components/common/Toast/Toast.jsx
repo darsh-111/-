@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import './Toast.css';
+import { useInjectStyles } from '../../../utils/injectStyles';
 
 // Toast Context for global access
 const ToastContext = createContext(null);
@@ -58,10 +58,11 @@ export function useToast() {
  * Toast Container - Renders all active toasts
  */
 function ToastContainer({ toasts, onRemove }) {
+    useInjectStyles('@keyframes toastSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}', 'toast-keyframes');
     if (toasts.length === 0) return null;
 
     return (
-        <div className="toast-container" role="region" aria-label="الإشعارات">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-[500] max-w-[90vw] w-[400px]" role="region" aria-label="الإشعارات">
             {toasts.map(toast => (
                 <Toast key={toast.id} {...toast} onClose={() => onRemove(toast.id)} />
             ))}
@@ -73,6 +74,18 @@ function ToastContainer({ toasts, onRemove }) {
  * Individual Toast Component
  */
 function Toast({ message, type, onClose }) {
+    const borderColorMap = {
+        info: 'border-r-primary-500',
+        success: 'border-r-success-500',
+        warning: 'border-r-warning-500',
+        error: 'border-r-error-500',
+    };
+    const iconColorMap = {
+        info: 'text-primary-500',
+        success: 'text-success-500',
+        warning: 'text-warning-500',
+        error: 'text-error-500',
+    };
     const icons = {
         info: (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -101,10 +114,10 @@ function Toast({ message, type, onClose }) {
     };
 
     return (
-        <div className={`toast toast--${type}`} role="alert">
-            <span className="toast__icon">{icons[type]}</span>
-            <span className="toast__message">{message}</span>
-            <button className="toast__close" onClick={onClose} aria-label="إغلاق">
+        <div className={`flex items-center gap-3 px-4 py-3 bg-white dark:bg-neutral-800 rounded-lg shadow-lg animate-[toastSlideIn_200ms_ease] border-r-4 ltr:border-r-0 ltr:border-l-4 ${borderColorMap[type]}`} role="alert">
+            <span className={`flex-shrink-0 ${iconColorMap[type]}`}>{icons[type]}</span>
+            <span className="flex-1 text-sm text-neutral-800 dark:text-neutral-200">{message}</span>
+            <button className="flex-shrink-0 flex items-center justify-center w-7 h-7 border-none bg-transparent rounded cursor-pointer text-neutral-400 transition-all hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300" onClick={onClose} aria-label="إغلاق">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
                 </svg>

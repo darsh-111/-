@@ -1,5 +1,3 @@
-import './Input.css';
-
 /**
  * Input Component
  * Text, number, phone, and textarea variants with validation states
@@ -30,17 +28,17 @@ function Input({
     const hasError = !!error;
 
     const wrapperClasses = [
-        'input-wrapper',
-        hasError && 'input-wrapper--error',
-        disabled && 'input-wrapper--disabled',
+        'flex flex-col gap-2 w-full',
         className
     ].filter(Boolean).join(' ');
 
     const inputClasses = [
-        'input',
-        icon && 'input--with-icon',
-        prefix && 'input--with-prefix',
-        suffix && 'input--with-suffix'
+        'w-full px-4 py-3 font-inherit text-base text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md transition-all placeholder-neutral-400 hover:border-neutral-400 focus:outline-none focus:border-primary-500 focus:ring-3 focus:ring-primary-500/10 disabled:bg-neutral-100 dark:disabled:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-70',
+        icon && 'ps-10',
+        prefix && 'ps-16',
+        suffix && 'pe-12',
+        hasError && 'border-error-500 focus:ring-error-500/10',
+        multiline && 'resize-y min-h-[100px]'
     ].filter(Boolean).join(' ');
 
     const InputElement = multiline ? 'textarea' : 'input';
@@ -48,15 +46,15 @@ function Input({
     return (
         <div className={wrapperClasses}>
             {label && (
-                <label htmlFor={inputId} className="input__label">
+                <label htmlFor={inputId} className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     {label}
-                    {required && <span className="input__required" aria-hidden="true">*</span>}
+                    {required && <span className="text-error-500 me-1" aria-hidden="true">*</span>}
                 </label>
             )}
 
-            <div className="input__container">
-                {icon && <span className="input__icon">{icon}</span>}
-                {prefix && <span className="input__prefix">{prefix}</span>}
+            <div className="relative flex items-center">
+                {icon && <span className="absolute start-3 flex items-center text-neutral-400 pointer-events-none">{icon}</span>}
+                {prefix && <span className="absolute flex items-center px-3 text-neutral-500 text-sm pointer-events-none start-0 border-e border-neutral-300 bg-neutral-50 dark:bg-neutral-700 h-full rounded-s-md">{prefix}</span>}
 
                 <InputElement
                     id={inputId}
@@ -77,17 +75,17 @@ function Input({
                     {...props}
                 />
 
-                {suffix && <span className="input__suffix">{suffix}</span>}
+                {suffix && <span className="absolute flex items-center px-3 text-neutral-500 text-sm pointer-events-none end-0">{suffix}</span>}
             </div>
 
             {error && (
-                <span id={errorId} className="input__error" role="alert">
+                <span id={errorId} className="text-sm text-error-500 flex items-center gap-1" role="alert">
                     {error}
                 </span>
             )}
 
             {hint && !error && (
-                <span id={hintId} className="input__hint">
+                <span id={hintId} className="text-sm text-neutral-500">
                     {hint}
                 </span>
             )}

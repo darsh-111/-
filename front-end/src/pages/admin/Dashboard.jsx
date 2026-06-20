@@ -1,27 +1,24 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-    Box, Grid, Card, CardContent, Typography, Button,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Chip, Stack, IconButton, List, ListItem, ListItemText,
-    ListItemAvatar, Avatar, useTheme, alpha, Snackbar, Alert
-} from '@mui/material';
 import { t, formatCurrency } from '../../i18n';
 import { AdminPageHeader, AdminStatsGrid } from '../../components/admin';
 import { getPriorityColor } from '../../utils/admin.helpers';
 import { useAdminData } from '../../contexts/AdminDataContext';
 import { dashboardPendingTasks } from '../../data/adminMockData';
 
-/**
- * Dashboard — reads all stats from shared AdminDataContext (real data)
- */
 function Dashboard() {
-    const theme = useTheme();
     const { state } = useAdminData();
     const dashboardStats = state.dashboardStats || {};
 
     const [tasks, setTasks] = useState(dashboardPendingTasks || []);
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const handleCompleteTask = useCallback((taskId) => {
         setTasks(prev => prev.filter(t => t.id !== taskId));
@@ -33,10 +30,10 @@ function Dashboard() {
             setSnackbar({ open: true, msg: 'لا توجد بيانات لتصديرها', severity: 'error' });
             return;
         }
-        
+
         const headers = ['ID', 'المتبرع', 'المبلغ', 'المشروع', 'طريقة الدفع', 'التاريخ', 'الحالة'];
         const csvRows = [headers.join(',')];
-        
+
         state.donations.forEach(d => {
             const row = [
                 d.id,
@@ -49,7 +46,7 @@ function Dashboard() {
             ];
             csvRows.push(row.join(','));
         });
-        
+
         const csvString = csvRows.join('\n');
         const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -60,11 +57,10 @@ function Dashboard() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         setSnackbar({ open: true, msg: 'تم تصدير التقرير بنجاح ✓', severity: 'success' });
     };
 
-    // Live KPIs derived from real context data
     const kpis = [
         {
             label: 'إجمالي التبرعات',
@@ -107,11 +103,18 @@ function Dashboard() {
         { label: t('admin.manageUsers'), icon: 'fa-solid fa-users', link: '/admin/settings', color: 'success' },
     ];
 
-    // Most recent 5 donations from context
     const recentDonations = [...state.donations].reverse().slice(0, 5);
 
+    const priorityBarColor = (priority) => {
+        const map = { error: 'var(--color-error-500)', warning: 'var(--color-warning-500)', success: 'var(--color-success-500)' };
+        return map[getPriorityColor(priority)] || 'var(--color-neutral-500)';
+    };
+
+    const dynamicBg100 = (color) => `color-mix(in srgb, var(--color-${color || 'primary'}-500) 10%, transparent)`;
+    const dynamicColor = (color) => `var(--color-${color || 'primary'}-500)`;
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.dashboard')}
                 subtitle="مرحباً بك في لوحة تحكم جمعية نور الخيرية 👋"
@@ -120,122 +123,109 @@ function Dashboard() {
 
             <AdminStatsGrid stats={kpis} columns={3} />
 
-            <Grid container spacing={3}>
-                {/* Recent Donations + Quick Actions */}
-                <Grid item xs={12} lg={8}>
-                    <Stack spacing={3}>
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.recentDonations')}</Typography>
-                                <Button component={Link} to="/admin/donations" size="small">{t('admin.viewAllBtn')}</Button>
-                            </Box>
+            <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-12 lg:col-span-8">
+                    <div className="flex flex-col gap-3">
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700 overflow-hidden">
+                            <div className="p-4 flex justify-between items-center border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="font-bold text-base">{t('admin.recentDonations')}</h6>
+                                <Link to="/admin/donations" className="text-sm font-semibold text-primary-500 hover:text-primary-600 transition-colors">{t('admin.viewAllBtn')}</Link>
+                            </div>
                             {recentDonations.length === 0 ? (
-                                <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-                                    <Typography variant="body2">لا توجد تبرعات بعد</Typography>
-                                </Box>
+                                <div className="p-4 text-center text-neutral-500 dark:text-neutral-400">
+                                    <p className="text-sm">لا توجد تبرعات بعد</p>
+                                </div>
                             ) : (
-                                <TableContainer>
-                                    <Table>
-                                        <TableHead>
-                                            <TableRow sx={{ bgcolor: 'action.hover' }}>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.donationsPage.donor')}</TableCell>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.donationsPage.amount')}</TableCell>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.donationsPage.project')}</TableCell>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>طريقة الدفع</TableCell>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.donationsPage.date')}</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+                                                <th className="p-3 text-right text-sm font-bold">{t('admin.donationsPage.donor')}</th>
+                                                <th className="p-3 text-right text-sm font-bold">{t('admin.donationsPage.amount')}</th>
+                                                <th className="p-3 text-right text-sm font-bold">{t('admin.donationsPage.project')}</th>
+                                                <th className="p-3 text-right text-sm font-bold">طريقة الدفع</th>
+                                                <th className="p-3 text-right text-sm font-bold">{t('admin.donationsPage.date')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
                                             {recentDonations.map(donation => (
-                                                <TableRow key={donation.id} hover>
-                                                    <TableCell sx={{ fontWeight: 'medium' }}>{donation.donor}</TableCell>
-                                                    <TableCell sx={{ fontWeight: 'bold', color: 'success.main' }}>{formatCurrency(donation.amount)}</TableCell>
-                                                    <TableCell>{donation.project}</TableCell>
-                                                    <TableCell>{donation.method}</TableCell>
-                                                    <TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>{donation.date || donation.time}</TableCell>
-                                                </TableRow>
+                                                <tr key={donation.id} className="border-b border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
+                                                    <td className="p-3 font-medium">{donation.donor}</td>
+                                                    <td className="p-3 font-bold text-success-500">{formatCurrency(donation.amount)}</td>
+                                                    <td className="p-3">{donation.project}</td>
+                                                    <td className="p-3">{donation.method}</td>
+                                                    <td className="p-3 text-neutral-500 dark:text-neutral-400 text-sm">{donation.date || donation.time}</td>
+                                                </tr>
                                             ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
-                        </Card>
+                        </div>
 
-                        {/* Quick Actions */}
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.quickActions')}</Typography>
-                            </Box>
-                            <CardContent>
-                                <Grid container spacing={2}>
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700 overflow-hidden">
+                            <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="font-bold text-base">{t('admin.quickActions')}</h6>
+                            </div>
+                            <div className="p-4">
+                                <div className="grid grid-cols-12 gap-2">
                                     {quickActions.map((action, i) => (
-                                        <Grid item xs={6} sm={3} key={i}>
-                                            <Button
-                                                component={Link} to={action.link} variant="outlined" color="inherit" fullWidth
-                                                sx={{
-                                                    py: 2, display: 'flex', flexDirection: 'column', gap: 1, height: '100%',
-                                                    borderColor: 'divider',
-                                                    '&:hover': {
-                                                        borderColor: `${action.color}.main`, color: `${action.color}.main`,
-                                                        bgcolor: alpha(theme.palette[action.color].main, 0.04)
-                                                    }
-                                                }}
+                                        <div className="col-span-6 sm:col-span-3" key={i}>
+                                            <Link to={action.link}
+                                                className="flex flex-col items-center gap-1 py-4 px-2 h-full rounded-lg border border-neutral-200 dark:border-neutral-700 transition-colors text-neutral-700 dark:text-neutral-300"
+                                                style={{ hover: {} }}
+                                                onMouseEnter={e => { e.currentTarget.style.borderColor = `var(--color-${action.color}-500)`; e.currentTarget.style.color = `var(--color-${action.color}-500)`; e.currentTarget.style.backgroundColor = `color-mix(in srgb, var(--color-${action.color}-500) 4%, transparent)`; }}
+                                                onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.color = ''; e.currentTarget.style.backgroundColor = ''; }}
                                             >
-                                                <Box sx={{ fontSize: 24, mb: 0.5 }}><i className={action.icon} /></Box>
-                                                <Typography variant="body2" fontWeight="medium">{action.label}</Typography>
-                                            </Button>
-                                        </Grid>
+                                                <span className="text-2xl mb-1"><i className={action.icon} /></span>
+                                                <span className="text-sm font-medium">{action.label}</span>
+                                            </Link>
+                                        </div>
                                     ))}
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Stack>
-                </Grid>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                {/* Sidebar */}
-                <Grid item xs={12} lg={4}>
-                    <Stack spacing={3}>
-                        {/* Pending Tasks */}
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.pendingTasks')}</Typography>
-                                <Chip label={tasks.length} size="small" color={tasks.length > 0 ? 'error' : 'success'} />
-                            </Box>
+                <div className="col-span-12 lg:col-span-4">
+                    <div className="flex flex-col gap-3">
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700 overflow-hidden">
+                            <div className="p-4 flex justify-between items-center border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="font-bold text-base">{t('admin.pendingTasks')}</h6>
+                                <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${tasks.length > 0 ? 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400' : 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400'}`}>{tasks.length}</span>
+                            </div>
                             {tasks.length === 0 ? (
-                                <Box sx={{ p: 3, textAlign: 'center' }}>
-                                    <Typography variant="body2" color="text.secondary">لا توجد مهام معلقة ✓</Typography>
-                                </Box>
+                                <div className="p-3 text-center">
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">لا توجد مهام معلقة ✓</p>
+                                </div>
                             ) : (
-                                <List disablePadding>
+                                <div>
                                     {tasks.map((task, i) => (
-                                        <ListItem
-                                            key={task.id}
-                                            divider={i !== tasks.length - 1}
-                                            secondaryAction={
-                                                <IconButton edge="end" size="small" color="success" onClick={() => handleCompleteTask(task.id)}>
-                                                    <i className="fa-regular fa-square-check" />
-                                                </IconButton>
-                                            }
-                                        >
-                                            <Box sx={{ width: 4, height: 40, borderRadius: 1, bgcolor: `${getPriorityColor(task.priority)}.main`, mr: 2 }} />
-                                            <ListItemText
-                                                primary={task.title}
-                                                primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-                                                secondary={`← ${task.assignee}`}
-                                                secondaryTypographyProps={{ variant: 'caption' }}
-                                            />
-                                        </ListItem>
+                                        <div key={task.id} className={`flex items-center px-4 py-3 gap-3 ${i !== tasks.length - 1 ? 'border-b border-neutral-200 dark:border-neutral-700' : ''}`}>
+                                            <div className="w-1 h-10 rounded" style={{ backgroundColor: priorityBarColor(task.priority) }} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{task.title}</p>
+                                                <p className="text-xs text-neutral-500 dark:text-neutral-400">← {task.assignee}</p>
+                                            </div>
+                                            <button
+                                                className="p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-success-500"
+                                                onClick={() => handleCompleteTask(task.id)}
+                                                title="إكمال المهمة"
+                                            >
+                                                <i className="fa-regular fa-square-check" />
+                                            </button>
+                                        </div>
                                     ))}
-                                </List>
+                                </div>
                             )}
-                        </Card>
+                        </div>
 
-                        {/* Summary stats */}
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">ملخص البيانات</Typography>
-                            </Box>
-                            <List disablePadding>
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700 overflow-hidden">
+                            <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="font-bold text-base">ملخص البيانات</h6>
+                            </div>
+                            <div>
                                 {[
                                     { label: 'إجمالي المشاريع', value: state.projects.length, icon: 'fa-solid fa-clipboard-list', color: 'primary' },
                                     { label: 'مشاريع مكتملة', value: state.projects.filter(p => p.status === 'completed').length, icon: 'fa-solid fa-circle-check', color: 'success' },
@@ -243,60 +233,62 @@ function Dashboard() {
                                     { label: 'عدد البرامج', value: state.programs.length, icon: 'fa-solid fa-folder-open', color: 'info' },
                                     { label: 'طلبات صرف معلقة', value: dashboardStats.pendingDisbursements || 0, icon: 'fa-solid fa-clock', color: 'secondary' },
                                 ].map((item, i) => (
-                                    <ListItem key={i} divider={i !== 4}>
-                                        <ListItemAvatar sx={{ minWidth: 40 }}>
-                                            <Avatar sx={{ width: 32, height: 32, bgcolor: alpha(theme.palette[item.color]?.main || theme.palette.primary.main, 0.1), color: `${item.color}.main`, fontSize: 14 }}>
-                                                <i className={item.icon} />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={item.label}
-                                            primaryTypographyProps={{ variant: 'body2' }}
-                                        />
-                                        <Typography variant="h6" fontWeight="bold" color={`${item.color}.main`}>{item.value}</Typography>
-                                    </ListItem>
+                                    <div key={i} className={`flex items-center px-4 py-3 gap-3 ${i !== 4 ? 'border-b border-neutral-200 dark:border-neutral-700' : ''}`}>
+                                        <div className="w-8 h-8 rounded flex items-center justify-center text-sm" style={{ backgroundColor: dynamicBg100(item.color), color: dynamicColor(item.color) }}>
+                                            <i className={item.icon} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm text-neutral-900 dark:text-neutral-100">{item.label}</p>
+                                        </div>
+                                        <h6 className="font-bold text-base" style={{ color: dynamicColor(item.color) }}>{item.value}</h6>
+                                    </div>
                                 ))}
-                            </List>
-                        </Card>
+                            </div>
+                        </div>
 
-                        {/* Recent Activity */}
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.recentActivity')}</Typography>
-                            </Box>
-                            <List disablePadding>
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700 overflow-hidden">
+                            <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="font-bold text-base">{t('admin.recentActivity')}</h6>
+                            </div>
+                            <div>
                                 {state.activities.length === 0 ? (
-                                    <Box sx={{ p: 3, textAlign: 'center' }}>
-                                        <Typography variant="body2" color="text.secondary">لا توجد نشاطات حديثة</Typography>
-                                    </Box>
+                                    <div className="p-3 text-center">
+                                        <p className="text-sm text-neutral-500 dark:text-neutral-400">لا توجد نشاطات حديثة</p>
+                                    </div>
                                 ) : state.activities.map((activity) => (
-                                    <ListItem key={activity.id} alignItems="flex-start">
-                                        <ListItemAvatar sx={{ minWidth: 40 }}>
-                                            <Avatar sx={{ width: 32, height: 32, bgcolor: alpha(theme.palette[activity.color || 'primary'].main, 0.1), color: `${activity.color || 'primary'}.main`, fontSize: 14 }}>
-                                                <i className={activity.icon || 'fa-solid fa-bolt'} />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={activity.action}
-                                            primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-                                            secondary={
-                                                <Stack direction="row" spacing={1} component="span" sx={{ fontSize: '0.75rem', mt: 0.5 }}>
-                                                    <span>{activity.user || 'المدير'}</span><span>•</span><span>{new Date(activity.timestamp).toLocaleString('ar-EG')}</span>
-                                                </Stack>
-                                            }
-                                        />
-                                    </ListItem>
+                                    <div key={activity.id} className="flex items-start px-4 py-3 gap-3">
+                                        <div className="w-8 h-8 rounded flex items-center justify-center text-sm flex-shrink-0" style={{ backgroundColor: dynamicBg100(activity.color || 'primary'), color: dynamicColor(activity.color || 'primary') }}>
+                                            <i className={activity.icon || 'fa-solid fa-bolt'} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{activity.action}</p>
+                                            <div className="flex gap-1 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                                <span>{activity.user || 'المدير'}</span><span>•</span><span>{new Date(activity.timestamp).toLocaleString('ar-EG')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
-                            </List>
-                        </Card>
-                    </Stack>
-                </Grid>
-            </Grid>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity || 'success'} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 ${
+                        snackbar.severity === 'success' ? 'bg-success-500 text-white' :
+                        snackbar.severity === 'error' ? 'bg-error-500 text-white' :
+                        'bg-primary-500 text-white'
+                    }`}>
+                        <span>{snackbar.msg}</span>
+                        <button className="text-white/80 hover:text-white mr-2" onClick={() => setSnackbar(s => ({ ...s, open: false }))}>
+                            <i className="fa-solid fa-xmark" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

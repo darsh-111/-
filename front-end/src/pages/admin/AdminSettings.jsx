@@ -1,21 +1,11 @@
-import { useState, useCallback } from 'react';
-import {
-    Box, Card, CardContent, Typography, TextField, Grid,
-    Switch, Button, Chip, MenuItem,
-    List, ListItem, ListItemText, ListItemSecondaryAction,
-    Avatar, useTheme, alpha, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
-} from '@mui/material';
+import { useState, useCallback, useEffect } from 'react';
 import { AdminPageHeader, AdminFilterBar, AdminDataTable, AdminIconBox, AdminFormDialog } from '../../components/admin';
 import { t } from '../../i18n';
 import { settingsUsers as initialUsers, settingsIntegrations as initialIntegrations, settingsNotifications } from '../../data/adminMockData';
 import { getStatusColor, getStatusLabel } from '../../utils/admin.helpers';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 
-/**
- * Admin Settings Page — with working forms, user CRUD, and toggles
- */
 function AdminSettings() {
-    const theme = useTheme();
     const { state, dispatch } = useAdminData();
     const [activeTab, setActiveTab] = useState('general');
     const [users, setUsers] = useState(initialUsers || []);
@@ -24,6 +14,13 @@ function AdminSettings() {
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editUser, setEditUser] = useState(null);
     const [resetDialog, setResetDialog] = useState({ open: false, input: '' });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     // Org form state
     const [orgData, setOrgData] = useState({
@@ -122,19 +119,27 @@ function AdminSettings() {
         { label: 'بوابات الدفع', value: 'integrations', icon: 'fa-solid fa-credit-card' },
     ];
 
+    const statusColorMap = {
+        connected: { bg: 'bg-success-100 dark:bg-success-900/30', text: 'text-success-700 dark:text-success-400' },
+        active: { bg: 'bg-success-100 dark:bg-success-900/30', text: 'text-success-700 dark:text-success-400' },
+        disconnected: { bg: 'bg-neutral-100 dark:bg-neutral-700', text: 'text-neutral-700 dark:text-neutral-300' },
+        pending: { bg: 'bg-warning-100 dark:bg-warning-900/30', text: 'text-warning-700 dark:text-warning-400' },
+        error: { bg: 'bg-error-100 dark:bg-error-900/30', text: 'text-error-700 dark:text-error-400' },
+    };
+
     const userColumns = [
         {
             key: 'name', label: t('admin.settingsPage.name'), fontWeight: 'medium',
             render: (_, row) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontSize: 14 }}>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-8 h-8 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center text-sm font-bold overflow-hidden">
                         {row.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                        <Typography variant="body2" fontWeight="medium">{row.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{row.email}</Typography>
-                    </Box>
-                </Box>
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium">{row.name}</p>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">{row.email}</span>
+                    </div>
+                </div>
             ),
         },
         { key: 'role', label: t('admin.settingsPage.role') },
@@ -149,7 +154,7 @@ function AdminSettings() {
     const updateUserField = (field) => (e) => setUserForm(prev => ({ ...prev, [field]: e.target.value }));
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.settingsPage.title')}
                 subtitle={t('admin.settingsPage.subtitle')}
@@ -159,131 +164,148 @@ function AdminSettings() {
 
             {/* General Settings */}
             {activeTab === 'general' && (
-                <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.settingsPage.orgInfo')}</Typography>
-                            </Box>
-                            <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <TextField label={t('admin.settingsPage.orgName')} value={orgData.name} onChange={e => setOrgData(d => ({ ...d, name: e.target.value }))} fullWidth />
-                                <TextField label={t('admin.settingsPage.email')} value={orgData.email} onChange={e => setOrgData(d => ({ ...d, email: e.target.value }))} fullWidth />
-                                <TextField label={t('admin.settingsPage.phone')} value={orgData.phone} onChange={e => setOrgData(d => ({ ...d, phone: e.target.value }))} fullWidth />
-                                <TextField label={t('admin.settingsPage.address')} value={orgData.address} onChange={e => setOrgData(d => ({ ...d, address: e.target.value }))} fullWidth />
-                                <TextField label="مواعيد العمل" value={orgData.workingHours} onChange={e => setOrgData(d => ({ ...d, workingHours: e.target.value }))} fullWidth />
-                                <Typography variant="subtitle2" fontWeight="bold" sx={{ mt: 1 }}>روابط التواصل الاجتماعي</Typography>
-                                <TextField label="فيسبوك" value={socialData.facebook} onChange={e => setSocialData(d => ({ ...d, facebook: e.target.value }))} fullWidth placeholder="https://facebook.com/..." InputProps={{ startAdornment: <Box component="i" className="fa-brands fa-facebook" sx={{ mr: 1, color: '#1877F2' }} /> }} />
-                                <TextField label="تويتر / X" value={socialData.twitter} onChange={e => setSocialData(d => ({ ...d, twitter: e.target.value }))} fullWidth placeholder="https://x.com/..." InputProps={{ startAdornment: <Box component="i" className="fa-brands fa-x-twitter" sx={{ mr: 1 }} /> }} />
-                                <TextField label="إنستغرام" value={socialData.instagram} onChange={e => setSocialData(d => ({ ...d, instagram: e.target.value }))} fullWidth placeholder="https://instagram.com/..." InputProps={{ startAdornment: <Box component="i" className="fa-brands fa-instagram" sx={{ mr: 1, color: '#E4405F' }} /> }} />
-                                <TextField label="يوتيوب" value={socialData.youtube} onChange={e => setSocialData(d => ({ ...d, youtube: e.target.value }))} fullWidth placeholder="https://youtube.com/..." InputProps={{ startAdornment: <Box component="i" className="fa-brands fa-youtube" sx={{ mr: 1, color: '#FF0000' }} /> }} />
-                                <TextField label="واتسآب" value={socialData.whatsapp} onChange={e => setSocialData(d => ({ ...d, whatsapp: e.target.value }))} fullWidth placeholder="https://wa.me/..." InputProps={{ startAdornment: <Box component="i" className="fa-brands fa-whatsapp" sx={{ mr: 1, color: '#25D366' }} /> }} />
-                                <Button variant="contained" sx={{ alignSelf: 'flex-start' }} onClick={handleSaveOrg}>{t('admin.settingsPage.saveChanges')}</Button>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                                <Typography variant="h6" fontWeight="bold">{t('admin.settingsPage.systemSettings')}</Typography>
-                            </Box>
-                            <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <TextField select label={t('admin.settingsPage.language')} value={sysData.language} onChange={e => setSysData(d => ({ ...d, language: e.target.value }))} fullWidth>
-                                    <MenuItem value="ar">العربية</MenuItem>
-                                    <MenuItem value="en">English</MenuItem>
-                                </TextField>
-                                <TextField select label={t('admin.settingsPage.timezone')} value={sysData.timezone} onChange={e => setSysData(d => ({ ...d, timezone: e.target.value }))} fullWidth>
-                                    <MenuItem value="africa-cairo">القاهرة (GMT+2)</MenuItem>
-                                    <MenuItem value="asia-riyadh">الرياض (GMT+3)</MenuItem>
-                                </TextField>
-                                <TextField select label={t('admin.settingsPage.currency')} value={sysData.currency} onChange={e => setSysData(d => ({ ...d, currency: e.target.value }))} fullWidth>
-                                    <MenuItem value="egp">جنيه مصري (EGP)</MenuItem>
-                                    <MenuItem value="usd">دولار أمريكي (USD)</MenuItem>
-                                </TextField>
-                                <Button variant="contained" sx={{ alignSelf: 'flex-start' }} onClick={handleSaveSys}>{t('admin.settingsPage.saveChanges')}</Button>
-                            </CardContent>
-                        </Card>
+                <div className="grid grid-cols-12 gap-6">
+                    <div className="col-span-12 md:col-span-6">
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700">
+                            <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="text-base font-bold">{t('admin.settingsPage.orgInfo')}</h6>
+                            </div>
+                            <div className="p-4 flex flex-col gap-2">
+                                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.orgName')} value={orgData.name} onChange={e => setOrgData(d => ({ ...d, name: e.target.value }))} />
+                                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.email')} value={orgData.email} onChange={e => setOrgData(d => ({ ...d, email: e.target.value }))} />
+                                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.phone')} value={orgData.phone} onChange={e => setOrgData(d => ({ ...d, phone: e.target.value }))} />
+                                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.address')} value={orgData.address} onChange={e => setOrgData(d => ({ ...d, address: e.target.value }))} />
+                                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="مواعيد العمل" value={orgData.workingHours} onChange={e => setOrgData(d => ({ ...d, workingHours: e.target.value }))} />
+                                <p className="text-sm font-bold mt-2">روابط التواصل الاجتماعي</p>
+                                <div className="relative">
+                                    <i className="fa-brands fa-facebook absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#1877F2' }} />
+                                    <input className="w-full px-3 py-2.5 pr-10 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://facebook.com/..." value={socialData.facebook} onChange={e => setSocialData(d => ({ ...d, facebook: e.target.value }))} />
+                                </div>
+                                <div className="relative">
+                                    <i className="fa-brands fa-x-twitter absolute right-3 top-1/2 -translate-y-1/2" />
+                                    <input className="w-full px-3 py-2.5 pr-10 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://x.com/..." value={socialData.twitter} onChange={e => setSocialData(d => ({ ...d, twitter: e.target.value }))} />
+                                </div>
+                                <div className="relative">
+                                    <i className="fa-brands fa-instagram absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#E4405F' }} />
+                                    <input className="w-full px-3 py-2.5 pr-10 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://instagram.com/..." value={socialData.instagram} onChange={e => setSocialData(d => ({ ...d, instagram: e.target.value }))} />
+                                </div>
+                                <div className="relative">
+                                    <i className="fa-brands fa-youtube absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#FF0000' }} />
+                                    <input className="w-full px-3 py-2.5 pr-10 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://youtube.com/..." value={socialData.youtube} onChange={e => setSocialData(d => ({ ...d, youtube: e.target.value }))} />
+                                </div>
+                                <div className="relative">
+                                    <i className="fa-brands fa-whatsapp absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#25D366' }} />
+                                    <input className="w-full px-3 py-2.5 pr-10 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://wa.me/..." value={socialData.whatsapp} onChange={e => setSocialData(d => ({ ...d, whatsapp: e.target.value }))} />
+                                </div>
+                                <button className="self-start bg-primary-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-primary-600 transition-colors" onClick={handleSaveOrg}>{t('admin.settingsPage.saveChanges')}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-span-12 md:col-span-6">
+                        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700">
+                            <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                                <h6 className="text-base font-bold">{t('admin.settingsPage.systemSettings')}</h6>
+                            </div>
+                            <div className="p-4 flex flex-col gap-2">
+                                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={sysData.language} onChange={e => setSysData(d => ({ ...d, language: e.target.value }))}>
+                                    <option value="ar">العربية</option>
+                                    <option value="en">English</option>
+                                </select>
+                                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={sysData.timezone} onChange={e => setSysData(d => ({ ...d, timezone: e.target.value }))}>
+                                    <option value="africa-cairo">القاهرة (GMT+2)</option>
+                                    <option value="asia-riyadh">الرياض (GMT+3)</option>
+                                </select>
+                                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={sysData.currency} onChange={e => setSysData(d => ({ ...d, currency: e.target.value }))}>
+                                    <option value="egp">جنيه مصري (EGP)</option>
+                                    <option value="usd">دولار أمريكي (USD)</option>
+                                </select>
+                                <button className="self-start bg-primary-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-primary-600 transition-colors" onClick={handleSaveSys}>{t('admin.settingsPage.saveChanges')}</button>
+                            </div>
+                        </div>
 
-                        <Card elevation={0} sx={{ border: 1, borderColor: 'error.main', mt: 3, bgcolor: alpha(theme.palette.error.main, 0.05) }}>
-                            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'error.main', color: 'error.main' }}>
-                                <Typography variant="h6" fontWeight="bold">منطقة الخطر (Danger Zone)</Typography>
-                            </Box>
-                            <CardContent>
-                                <Typography variant="body2" sx={{ mb: 2 }}>
+                        <div className="rounded-lg shadow-card border border-error-500 mt-6" style={{ backgroundColor: 'rgba(239, 68, 68, 0.05)' }}>
+                            <div className="p-4 border-b border-error-500 text-error-500">
+                                <h6 className="text-base font-bold">منطقة الخطر (Danger Zone)</h6>
+                            </div>
+                            <div className="p-4">
+                                <p className="text-sm mb-4">
                                     حذف جميع البيانات (تبرعات، مشاريع، مستفيدين، إلخ) وإعادة النظام لحالته الأولية الافتراضية.
-                                </Typography>
-                                <Button variant="contained" color="error" onClick={() => setResetDialog({ open: true, input: '' })}>
+                                </p>
+                                <button className="bg-error-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-error-600 transition-colors" onClick={() => setResetDialog({ open: true, input: '' })}>
                                     إعادة تعيين النظام
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Users */}
             {activeTab === 'users' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button variant="contained" startIcon={<i className="fa-solid fa-plus" />} onClick={handleAddUser}>
-                            {t('admin.settingsPage.addUser')}
-                        </Button>
-                    </Box>
+                <div className="flex flex-col gap-2">
+                    <div className="flex justify-end">
+                        <button className="bg-primary-500 text-white px-5 py-2 rounded-md font-semibold hover:bg-primary-600 transition-colors inline-flex items-center gap-2" onClick={handleAddUser}>
+                            <i className="fa-solid fa-plus" /> {t('admin.settingsPage.addUser')}
+                        </button>
+                    </div>
                     <AdminDataTable columns={userColumns} data={users} actions={userActions} />
-                </Box>
+                </div>
             )}
 
             {/* Notifications */}
             {activeTab === 'notifications' && (
-                <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-                    <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                        <Typography variant="h6" fontWeight="bold">{t('admin.settingsPage.notificationSettings')}</Typography>
-                    </Box>
-                    <List disablePadding>
+                <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-card border border-neutral-100 dark:border-neutral-700">
+                    <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                        <h6 className="text-base font-bold">{t('admin.settingsPage.notificationSettings')}</h6>
+                    </div>
+                    <div>
                         {settingsNotifications.map((n, i) => (
-                            <ListItem key={i} divider={i !== settingsNotifications.length - 1}>
-                                <ListItemText
-                                    primary={n.label}
-                                    primaryTypographyProps={{ fontWeight: 'medium' }}
-                                    secondary={n.desc}
-                                />
-                                <ListItemSecondaryAction>
-                                    <Switch defaultChecked={n.enabled} color="primary" onChange={() => handleToggleNotification(i)} />
-                                </ListItemSecondaryAction>
-                            </ListItem>
+                            <div key={i} className={`flex items-center justify-between p-3 ${i !== settingsNotifications.length - 1 ? 'border-b border-neutral-200 dark:border-neutral-700' : ''}`}>
+                                <div>
+                                    <p className="font-medium">{n.label}</p>
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{n.desc}</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" defaultChecked={n.enabled} className="sr-only peer" onChange={() => handleToggleNotification(i)} />
+                                    <div className="w-11 h-6 bg-neutral-200 peer-checked:bg-primary-500 rounded-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </label>
+                            </div>
                         ))}
-                    </List>
-                </Card>
+                    </div>
+                </div>
             )}
 
             {/* Integrations */}
             {activeTab === 'integrations' && (
-                <Grid container spacing={2}>
-                    {integrations.map((intg, i) => (
-                        <Grid item xs={12} sm={6} md={3} key={i}>
-                            <Card elevation={0} sx={{ border: 1, borderColor: intg.status === 'active' ? 'success.main' : 'divider', textAlign: 'center', p: 2 }}>
-                                <AdminIconBox icon={intg.icon} color={intg.color} size={50} fontSize={24} />
-                                <Typography variant="body1" fontWeight="bold" sx={{ mt: 1.5 }}>{intg.name}</Typography>
-                                <Typography variant="caption" color="text.secondary" display="block">{intg.desc}</Typography>
-                                <Chip
-                                    label={getStatusLabel(intg.status)}
-                                    color={getStatusColor(intg.status)}
-                                    size="small"
-                                    sx={{ mt: 1 }}
-                                />
-                                <Box sx={{ mt: 1 }}>
-                                    <Button
-                                        size="small"
-                                        variant={intg.status === 'connected' ? 'outlined' : 'contained'}
-                                        color={intg.status === 'connected' ? 'error' : 'primary'}
-                                        onClick={() => handleToggleIntegration(i)}
-                                    >
-                                        {intg.status === 'connected' ? 'قطع الاتصال' : t('admin.settingsPage.connect')}
-                                    </Button>
-                                </Box>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
+                <div className="grid grid-cols-12 gap-4">
+                    {integrations.map((intg, i) => {
+                        const sc = statusColorMap[intg.status] || statusColorMap.disconnected;
+                        return (
+                            <div className="col-span-12 sm:col-span-6 md:col-span-3" key={i}>
+                                <div className={`bg-white dark:bg-neutral-800 rounded-lg shadow-card border text-center p-4 ${intg.status === 'connected' ? 'border-success-500' : 'border-neutral-100 dark:border-neutral-700'}`}>
+                                    <AdminIconBox icon={intg.icon} color={intg.color} size={50} fontSize={24} />
+                                    <p className="font-bold mt-3">{intg.name}</p>
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400 block">{intg.desc}</span>
+                                    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium mt-1 ${sc.bg} ${sc.text}`}>
+                                        {getStatusLabel(intg.status)}
+                                    </span>
+                                    <div className="mt-1">
+                                        <button
+                                            className={`px-3 py-1 rounded-md text-sm font-semibold transition-colors ${
+                                                intg.status === 'connected'
+                                                    ? 'border border-error-500 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20'
+                                                    : 'bg-primary-500 text-white hover:bg-primary-600'
+                                            }`}
+                                            onClick={() => handleToggleIntegration(i)}
+                                        >
+                                            {intg.status === 'connected' ? 'قطع الاتصال' : t('admin.settingsPage.connect')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             )}
 
             {/* Add/Edit User Dialog */}
@@ -294,50 +316,66 @@ function AdminSettings() {
                 title={editUser ? `تعديل: ${editUser.name}` : t('admin.settingsPage.addUser')}
                 submitLabel={editUser ? t('admin.programsPage.saveChanges') : t('admin.settingsPage.addUser')}
             >
-                <TextField label={t('admin.settingsPage.name')} fullWidth required value={userForm.name} onChange={updateUserField('name')} />
-                <TextField label={t('admin.settingsPage.email')} fullWidth required value={userForm.email} onChange={updateUserField('email')} type="email" />
-                <TextField select label={t('admin.settingsPage.role')} fullWidth value={userForm.role} onChange={updateUserField('role')}>
-                    <MenuItem value="مدير">مدير</MenuItem>
-                    <MenuItem value="محرر">محرر</MenuItem>
-                    <MenuItem value="مشرف">مشرف</MenuItem>
-                    <MenuItem value="مراجع">مراجع</MenuItem>
-                </TextField>
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.name')} required value={userForm.name} onChange={updateUserField('name')} />
+                <input className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" placeholder={t('admin.settingsPage.email')} required value={userForm.email} onChange={updateUserField('email')} type="email" />
+                <select className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none" value={userForm.role} onChange={updateUserField('role')}>
+                    <option value="مدير">مدير</option>
+                    <option value="محرر">محرر</option>
+                    <option value="مشرف">مشرف</option>
+                    <option value="مراجع">مراجع</option>
+                </select>
             </AdminFormDialog>
 
             {/* Reset Data Confirmation Dialog */}
-            <Dialog open={resetDialog.open} onClose={() => setResetDialog({ open: false, input: '' })}>
-                <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>تحذير: إعادة تعيين جميع البيانات</DialogTitle>
-                <DialogContent>
-                    <DialogContentText sx={{ mb: 2 }}>
-                        أنت على وشك حذف جميع السجلات من النظام. لا يمكن التراجع عن هذا الإجراء!
-                        الرجاء كتابة <strong style={{ color: 'red' }}>حذف جميع البيانات</strong> للتأكيد.
-                    </DialogContentText>
-                    <TextField 
-                        fullWidth 
-                        autoFocus
-                        color="error"
-                        placeholder="حذف جميع البيانات" 
-                        value={resetDialog.input} 
-                        onChange={(e) => setResetDialog(prev => ({ ...prev, input: e.target.value }))} 
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setResetDialog({ open: false, input: '' })} color="inherit">إلغاء</Button>
-                    <Button 
-                        onClick={handleResetAll} 
-                        color="error" 
-                        variant="contained" 
-                        disabled={resetDialog.input !== 'حذف جميع البيانات'}
-                    >
-                        حذف نهائياً
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {resetDialog.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setResetDialog({ open: false, input: '' })}></div>
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-error-500">تحذير: إعادة تعيين جميع البيانات</h2>
+                        <div className="p-4">
+                            <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                                أنت على وشك حذف جميع السجلات من النظام. لا يمكن التراجع عن هذا الإجراء!
+                                الرجاء كتابة <strong style={{ color: 'red' }}>حذف جميع البيانات</strong> للتأكيد.
+                            </p>
+                            <input
+                                className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-error-500 outline-none"
+                                autoFocus
+                                placeholder="حذف جميع البيانات"
+                                value={resetDialog.input}
+                                onChange={(e) => setResetDialog(prev => ({ ...prev, input: e.target.value }))}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button onClick={() => setResetDialog({ open: false, input: '' })} className="px-4 py-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 rounded-md font-semibold transition-colors">إلغاء</button>
+                            <button
+                                onClick={handleResetAll}
+                                className={`px-5 py-2 rounded-md font-semibold transition-colors text-white ${
+                                    resetDialog.input !== 'حذف جميع البيانات'
+                                        ? 'bg-neutral-400 cursor-not-allowed'
+                                        : 'bg-error-500 hover:bg-error-600'
+                                }`}
+                                disabled={resetDialog.input !== 'حذف جميع البيانات'}
+                            >
+                                حذف نهائياً
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg text-white ${
+                        snackbar.severity === 'success' ? 'bg-success-500' :
+                        snackbar.severity === 'error' ? 'bg-error-500' :
+                        snackbar.severity === 'warning' ? 'bg-warning-500' :
+                        'bg-primary-500'
+                    }`}>
+                        {snackbar.msg}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

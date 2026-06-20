@@ -1,5 +1,4 @@
 import React from 'react';
-import { Box, Typography, Button, Container } from '@mui/material';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -19,31 +18,29 @@ class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
-                <Container component="main" maxWidth="sm" sx={{ mt: 8, mb: 4, textAlign: 'center' }}>
-                    <Box sx={{ p: 4, border: '1px solid #ccc', borderRadius: 2, bgcolor: '#fff' }}>
-                        <Typography variant="h4" component="h1" gutterBottom color="error">
+                <div className="max-w-lg mx-auto mt-8 mb-4 text-center px-4">
+                    <div className="p-6 border border-neutral-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700">
+                        <h1 className="text-2xl font-bold mb-4 text-error-500">
                             Something went wrong
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" paragraph>
+                        </h1>
+                        <p className="text-neutral-500 mb-4">
                             The application encountered an unexpected error.
-                        </Typography>
+                        </p>
                         {this.state.error && (
-                            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, textAlign: 'left', overflow: 'auto' }}>
-                                <Typography variant="caption" component="pre" sx={{ fontFamily: 'monospace' }}>
+                            <div className="mt-4 p-3 bg-neutral-100 dark:bg-neutral-900 rounded text-left overflow-auto">
+                                <pre className="text-xs font-mono text-neutral-700 dark:text-neutral-300">
                                     {this.state.error.toString()}
-                                </Typography>
-                            </Box>
+                                </pre>
+                            </div>
                         )}
-                        <Button
-                            variant="contained"
-                            color="primary"
+                        <button
                             onClick={() => window.location.reload()}
-                            sx={{ mt: 3 }}
+                            className="mt-6 px-6 py-2.5 bg-primary-500 text-white font-semibold rounded-md hover:bg-primary-600 transition-colors"
                         >
                             Reload Page
-                        </Button>
-                    </Box>
-                </Container>
+                        </button>
+                    </div>
+                </div>
             );
         }
 

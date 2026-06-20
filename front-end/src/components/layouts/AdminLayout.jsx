@@ -1,31 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import {
-    AppBar,
-    Box,
-    Toolbar,
-    IconButton,
-    Typography,
-    Menu,
-    MenuItem,
-    Avatar,
-    Badge,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    InputBase,
-    Divider,
-    useTheme,
-    useMediaQuery,
-    Tooltip,
-    Stack,
-    alpha,
-    Button,
-    Collapse
-} from '@mui/material';
 import { t, getLanguage } from '../../i18n';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme as useAppTheme } from '../../contexts/ThemeContext';
@@ -33,7 +7,6 @@ import { useNotifications } from '../../contexts/NotificationContext';
 
 const SIDEBAR_EXPANDED = 280;
 const SIDEBAR_COLLAPSED = 120;
-const APPBAR_HEIGHT = 64;
 
 function AdminLayout() {
     const location = useLocation();
@@ -41,34 +14,32 @@ function AdminLayout() {
     const { adminUser, logout, updateAdminPhoto } = useAuth();
     const { isDark, toggleTheme } = useAppTheme();
     const { notifications, unreadCount, markAsRead, markAllAsRead, initNotifications } = useNotifications();
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const photoInputRef = useRef(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-    // State
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [sidebarExpanded, setSidebarExpanded] = useState(!isMobile);
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [notifAnchorEl, setNotifAnchorEl] = useState(null);
     const [profileAnchorEl, setProfileAnchorEl] = useState(null);
-    const photoInputRef = useRef(null);
 
-    // Initialize admin notifications
     useEffect(() => {
         initNotifications('admin');
     }, [initNotifications]);
 
-    // Auto-collapse sidebar on mobile
     useEffect(() => {
-        if (isMobile) {
-            setSidebarExpanded(false);
-        }
+        if (isMobile) setSidebarExpanded(false);
     }, [isMobile]);
 
     const handleSidebarToggle = () => setSidebarExpanded(!sidebarExpanded);
     const handleDrawerToggle = () => setMobileDrawerOpen(!mobileDrawerOpen);
-
     const handleNotifClick = (event) => setNotifAnchorEl(event.currentTarget);
     const handleNotifClose = () => setNotifAnchorEl(null);
-
     const handleProfileClick = (event) => setProfileAnchorEl(event.currentTarget);
     const handleProfileClose = () => setProfileAnchorEl(null);
 
@@ -109,585 +80,233 @@ function AdminLayout() {
         { path: '/admin/messages', label: 'الرسائل', icon: 'fa-solid fa-message' },
     ];
 
-    const navItems = [
-        { path: '/admin', label: t('admin.dashboard'), icon: 'fa-solid fa-chart-pie', exact: true },
-        { path: '/admin/programs', label: t('admin.programs'), icon: 'fa-solid fa-folder-open' },
-        { path: '/admin/projects', label: t('admin.projects'), icon: 'fa-solid fa-clipboard-list' },
-        { path: '/admin/donations', label: t('admin.donations'), icon: 'fa-solid fa-coins' },
-        { path: '/admin/beneficiaries', label: t('admin.beneficiaries'), icon: 'fa-solid fa-users' },
-        { path: '/admin/finance', label: t('admin.finance'), icon: 'fa-solid fa-credit-card' },
-        { path: '/admin/reports', label: t('admin.reports'), icon: 'fa-solid fa-chart-line' },
-        { path: '/admin/cms', label: 'إدارة المحتوى', icon: 'fa-solid fa-pen-nib' },
-        { path: '/admin/blog', label: 'الأخبار', icon: 'fa-solid fa-newspaper' },
-        { path: '/admin/gallery', label: 'المعرض', icon: 'fa-solid fa-images' },
-        { path: '/admin/messages', label: 'الرسائل', icon: 'fa-solid fa-message' },
-        { path: '/admin/settings', label: t('admin.settings'), icon: 'fa-solid fa-gear' },
-    ];
-
     const isActive = (item) => {
         if (item.exact) return location.pathname === item.path;
         return location.pathname.startsWith(item.path);
     };
 
-    const drawerContent = (
-        <Box sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            bgcolor: 'background.paper',
-            color: 'text.primary',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            transition: 'width 0.3s ease'
-        }}>
-            {/* Sidebar Header with Logo */}
-            <Box sx={{
-                p: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                minHeight: APPBAR_HEIGHT
-            }}>
-                <Box component={Link} to="/admin" sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    width: '100%'
-                }}>
-                    <i className="fa-solid fa-moon" style={{ fontSize: '1.3rem', color: theme.palette.secondary.main }}></i>
+    const sidebarContent = (
+        <div className="h-full flex flex-col bg-white dark:bg-neutral-800 border-l border-neutral-200 dark:border-neutral-700 transition-[width] duration-300" style={{ width: sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED }}>
+            {/* Header */}
+            <div className="p-3 flex items-center gap-1.5 border-b border-neutral-200 dark:border-neutral-700" style={{ minHeight: 64 }}>
+                <Link to="/admin" className="flex items-center gap-1 no-underline text-inherit w-full">
+                    <i className="fa-solid fa-moon text-lg" style={{ color: 'var(--color-secondary-500)' }}></i>
                     {sidebarExpanded && (
                         <>
-                            <Typography variant="h6" fontWeight="bold" sx={{ fontSize: '0.95rem' }}>نور</Typography>
-                            <Box sx={{
-                                bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                                px: 1,
-                                py: 0.25,
-                                borderRadius: 1,
-                                ml: 'auto'
-                            }}>
-                                <Typography variant="caption" fontWeight="bold" sx={{ color: 'secondary.main', fontSize: '0.7rem' }}>إدارة</Typography>
-                            </Box>
+                            <span className="font-bold text-sm">نور</span>
+                            <span className="mr-auto px-1.5 py-0.5 rounded text-[0.7rem] font-bold" style={{ backgroundColor: 'rgba(18,53,91,0.1)', color: 'var(--color-secondary-500)' }}>إدارة</span>
                         </>
                     )}
-                </Box>
-            </Box>
+                </Link>
+            </div>
 
             {/* Navigation */}
-            <List sx={{ flex: 1, px: 1, py: 2 }}>
-                {sidebarItems.map((item) => (
-                    <Tooltip
-                        key={item.path}
-                        title={!sidebarExpanded ? item.label : ''}
-                        placement="right"
-                        arrow
-                    >
-                        <ListItem disablePadding sx={{ mb: 0.5 }}>
-                            <ListItemButton
-                                component={Link}
-                                to={item.path}
-                                selected={isActive(item)}
-                                onClick={isMobile ? handleDrawerToggle : undefined}
-                                sx={{
-                                    borderRadius: 1,
-                                    color: isActive(item) ? 'secondary.main' : 'text.primary',
-                                    '&.Mui-selected': {
-                                        bgcolor: alpha(theme.palette.secondary.main, 0.08),
-                                        color: 'secondary.main',
-                                        '&:hover': { bgcolor: alpha(theme.palette.secondary.main, 0.12) }
-                                    },
-                                    '&:hover': {
-                                        bgcolor: alpha(theme.palette.secondary.main, 0.05)
-                                    },
-                                    transition: 'all 0.2s ease',
-                                    justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-                                    px: 1.5,
-                                    py: 1.25
-                                }}
-                            >
-                                <ListItemIcon sx={{
-                                    minWidth: 0,
-                                    mr: sidebarExpanded ? 1.5 : 0,
-                                    color: 'inherit',
-                                    fontSize: '1.1rem',
-                                    display: 'flex',
-                                    justifyContent: 'center'
-                                }}>
+            <nav className="flex-1 px-1.5 py-3 overflow-y-auto">
+                {sidebarItems.map((item) => {
+                    const active = isActive(item);
+                    return (
+                        <div key={item.path} className="mb-0.5" title={!sidebarExpanded ? item.label : ''}>
+                            <Link to={item.path} onClick={isMobile ? handleDrawerToggle : undefined}
+                                className={`flex items-center no-underline rounded-lg transition-all duration-200 px-1.5 py-1.5 ${sidebarExpanded ? 'justify-start' : 'justify-center'} ${active ? 'bg-secondary-500/10 text-secondary-500' : 'text-inherit hover:bg-secondary-500/5'}`}
+                                style={active ? { color: 'var(--color-secondary-500)' } : {}}>
+                                <span className={`flex items-center justify-center text-lg ${sidebarExpanded ? 'ml-1.5' : ''}`} style={{ minWidth: 0 }}>
                                     <i className={item.icon}></i>
-                                </ListItemIcon>
+                                </span>
                                 {sidebarExpanded && (
-                                    <ListItemText
-                                        primary={item.label}
-                                        primaryTypographyProps={{
-                                            fontSize: '0.875rem',
-                                            fontWeight: isActive(item) ? '600' : '500'
-                                        }}
-                                    />
+                                    <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
                                 )}
-                                {sidebarExpanded && isActive(item) && (
-                                    <Box sx={{
-                                        width: 4,
-                                        height: 4,
-                                        borderRadius: '50%',
-                                        bgcolor: 'secondary.main',
-                                        ml: 'auto'
-                                    }} />
+                                {sidebarExpanded && active && (
+                                    <span className="w-1 h-1 rounded-full bg-secondary-500 mr-auto"></span>
                                 )}
-                            </ListItemButton>
-                        </ListItem>
-                    </Tooltip>
-                ))}
-            </List>
+                            </Link>
+                        </div>
+                    );
+                })}
+            </nav>
 
             {/* Sidebar Footer */}
-            <Box sx={{
-                p: 1.5,
-                borderTop: '1px solid',
-                borderColor: 'divider'
-            }}>
-                <Tooltip title={!sidebarExpanded ? 'العودة للموقع' : ''} placement="right" arrow>
-                    <ListItemButton
-                        component={Link}
-                        to="/"
-                        sx={{
-                            borderRadius: 1,
-                            mb: 0.5,
-                            color: 'text.primary',
-                            '&:hover': { bgcolor: 'action.hover' },
-                            justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-                            px: 1.5,
-                            py: 1.25
-                        }}
-                    >
-                        <ListItemIcon sx={{
-                            minWidth: 0,
-                            mr: sidebarExpanded ? 1.5 : 0,
-                            color: 'inherit',
-                            fontSize: '1rem',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}>
-                            <i className="fa-solid fa-house"></i>
-                        </ListItemIcon>
-                        {sidebarExpanded && (
-                            <ListItemText
-                                primary="العودة للموقع"
-                                primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: '500' }}
-                            />
-                        )}
-                    </ListItemButton>
-                </Tooltip>
-
-                <Tooltip title={!sidebarExpanded ? 'تسجيل الخروج' : ''} placement="right" arrow>
-                    <ListItemButton
-                        onClick={handleLogout}
-                        sx={{
-                            borderRadius: 1,
-                            color: 'error.main',
-                            '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.1) },
-                            justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-                            px: 1.5,
-                            py: 1.25
-                        }}
-                    >
-                        <ListItemIcon sx={{
-                            minWidth: 0,
-                            mr: sidebarExpanded ? 1.5 : 0,
-                            color: 'inherit',
-                            fontSize: '1rem',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}>
-                            <i className="fa-solid fa-right-from-bracket"></i>
-                        </ListItemIcon>
-                        {sidebarExpanded && (
-                            <ListItemText
-                                primary="تسجيل الخروج"
-                                primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: '500' }}
-                            />
-                        )}
-                    </ListItemButton>
-                </Tooltip>
-            </Box>
-        </Box>
+            <div className="p-1.5 border-t border-neutral-200 dark:border-neutral-700">
+                <Link to="/" title={!sidebarExpanded ? 'العودة للموقع' : ''}
+                    className={`flex items-center no-underline rounded-lg mb-0.5 text-inherit hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors ${sidebarExpanded ? 'justify-start px-1.5 py-1.5' : 'justify-center p-1.5'}`}>
+                    <span className={`flex items-center justify-center text-base ${sidebarExpanded ? 'ml-1.5' : ''}`}>
+                        <i className="fa-solid fa-house"></i>
+                    </span>
+                    {sidebarExpanded && <span className="text-sm font-medium">العودة للموقع</span>}
+                </Link>
+                <button onClick={handleLogout} title={!sidebarExpanded ? 'تسجيل الخروج' : ''}
+                    className={`w-full flex items-center rounded-lg text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors ${sidebarExpanded ? 'justify-start px-1.5 py-1.5' : 'justify-center p-1.5'}`}>
+                    <span className={`flex items-center justify-center text-base ${sidebarExpanded ? 'ml-1.5' : ''}`}>
+                        <i className="fa-solid fa-right-from-bracket"></i>
+                    </span>
+                    {sidebarExpanded && <span className="text-sm font-medium">تسجيل الخروج</span>}
+                </button>
+            </div>
+        </div>
     );
 
     return (
-        <Box sx={{
-            display: 'flex',
-            minHeight: '100vh',
-            bgcolor: 'background.default'
-        }}>
+        <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-900">
             {/* AppBar */}
-            <AppBar
-                position="fixed"
-                color="inherit"
-                elevation={0}
-                sx={{
-                    width: '100%',
-                    bgcolor: 'background.paper',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    zIndex: 1100,
-                    borderRadius: 0
-                }}
-            >
-                <Toolbar sx={{ height: APPBAR_HEIGHT, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {/* Sidebar Toggle Button */}
-                    <IconButton
-                        onClick={handleSidebarToggle}
-                        sx={{
-                            color: 'text.primary',
-                            display: { xs: 'none', md: 'flex' },
-                            border: '1px solid',
-                            borderColor: 'divider'
-                        }}
-                    >
+            <header className="fixed top-0 left-0 right-0 z-[1100] bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center h-16 px-3 gap-3">
+                    {/* Sidebar Toggle */}
+                    <button onClick={handleSidebarToggle}
+                        className="hidden md:flex border border-neutral-200 dark:border-neutral-600 rounded-md p-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors">
                         <i className={sidebarExpanded ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right'}></i>
-                    </IconButton>
+                    </button>
 
-                    {/* Mobile Menu Button */}
-                    <IconButton
-                        onClick={handleDrawerToggle}
-                        sx={{
-                            color: 'text.primary',
-                            display: { xs: 'flex', md: 'none' }
-                        }}
-                    >
-                        <i className="fa-solid fa-bars"></i>
-                    </IconButton>
+                    {/* Mobile Menu */}
+                    <button onClick={handleDrawerToggle}
+                        className="flex md:hidden p-1.5 text-neutral-700 dark:text-neutral-300">
+                        <i className="fa-solid fa-bars text-lg"></i>
+                    </button>
 
-                    {/* Top Navigation Items */}
-                    <Stack
-                        direction="row"
-                        spacing={0.5}
-                        sx={{
-                            display: { xs: 'none', md: 'flex' },
-                            ml: 1,
-                            borderRight: '1px solid',
-                            borderColor: 'divider',
-                            pr: 2
-                        }}
-                    >
+                    {/* Top Nav */}
+                    <div className="hidden md:flex items-center gap-1 mr-1 pl-2 border-r border-neutral-200 dark:border-neutral-700">
                         {topNavItems.map((item) => (
-                            <Tooltip key={item.path} title={item.label}>
-                                <IconButton
-                                    component={Link}
-                                    to={item.path}
-                                    sx={{
-                                        color: isActive(item) ? 'secondary.main' : 'text.primary',
-                                        '&:hover': { bgcolor: 'action.hover' },
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                    title={item.label}
-                                >
-                                    <i className={item.icon}></i>
-                                </IconButton>
-                            </Tooltip>
+                            <Link key={item.path} to={item.path} title={item.label}
+                                className={`p-1.5 rounded-md transition-colors no-underline ${isActive(item) ? 'text-secondary-500' : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'}`}>
+                                <i className={item.icon}></i>
+                            </Link>
                         ))}
-                    </Stack>
+                    </div>
 
-                    {/* Search Bar */}
-                    <Box sx={{
-                        display: { xs: 'none', sm: 'flex' },
-                        alignItems: 'center',
-                        bgcolor: 'action.hover',
-                        px: 2,
-                        py: 0.75,
-                        width: '100%',
-                        maxWidth: 350,
-                        transition: 'all 0.2s ease',
-                        '&:hover': { bgcolor: 'action.selected' }
-                    }}>
-                        <i className="fa-solid fa-magnifying-glass" style={{ color: theme.palette.text.secondary, marginRight: 8 }}></i>
-                        <InputBase
-                            placeholder="بحث..."
-                            sx={{ flex: 1, fontSize: '0.875rem' }}
-                        />
-                    </Box>
+                    {/* Search */}
+                    <div className="hidden sm:flex items-center bg-neutral-100 dark:bg-neutral-700/50 px-3 py-1.5 rounded-lg w-full max-w-[350px]">
+                        <i className="fa-solid fa-magnifying-glass text-neutral-400 ml-2"></i>
+                        <input type="text" placeholder="بحث..." className="flex-1 bg-transparent border-none outline-none text-sm text-inherit" />
+                    </div>
 
-                    <Box sx={{ flexGrow: 1 }} />
+                    <div className="flex-grow"></div>
 
                     {/* Right Actions */}
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                        {/* Theme Toggle */}
-                        <Tooltip title={isDark ? 'وضع فاتح' : 'وضع مظلم'}>
-                            <IconButton
-                                onClick={toggleTheme}
-                                size="small"
-                                sx={{
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    width: 36,
-                                    height: 36
-                                }}
-                            >
-                                <i className={isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
-                            </IconButton>
-                        </Tooltip>
+                    <div className="flex items-center gap-1">
+                        {/* Theme */}
+                        <button onClick={toggleTheme} title={isDark ? 'وضع فاتح' : 'وضع مظلم'}
+                            className="border border-neutral-200 dark:border-neutral-600 rounded-md w-9 h-9 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors">
+                            <i className={isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
+                        </button>
 
                         {/* Notifications */}
-                        <Tooltip title="إشعارات">
-                            <IconButton
-                                onClick={handleNotifClick}
-                                sx={{
-                                    border: '1px solid',
-                                    borderColor: 'divider'
-                                }}
-                            >
-                                <Badge badgeContent={unreadCount} color="error">
-                                    <i className="fa-solid fa-bell"></i>
-                                </Badge>
-                            </IconButton>
-                        </Tooltip>
+                        <button onClick={handleNotifClick} title="إشعارات"
+                            className="border border-neutral-200 dark:border-neutral-600 rounded-md p-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors relative">
+                            <i className="fa-solid fa-bell"></i>
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-error-500 text-white text-[10px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full">{unreadCount}</span>
+                            )}
+                        </button>
 
-                        {/* User Profile */}
-                        <ListItemButton
-                            onClick={handleProfileClick}
-                            sx={{
-                                p: 0.5,
-                                gap: 1,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                '&:hover': { bgcolor: 'action.hover' },
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            <Avatar
-                                src={adminUser?.photo}
-                                alt={adminUser?.name}
-                                sx={{ width: 32, height: 32, bgcolor: 'secondary.main', fontSize: '0.875rem' }}
-                            >
-                                {adminUser?.name?.charAt(0) || 'A'}
-                            </Avatar>
-                            <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'start' }}>
-                                <Typography variant="caption" fontWeight="600" lineHeight={1.2}>
-                                    {adminUser?.name || 'المسؤول'}
-                                </Typography>
-                            </Box>
-                        </ListItemButton>
-                    </Stack>
-                </Toolbar>
-            </AppBar>
+                        {/* Profile */}
+                        <button onClick={handleProfileClick}
+                            className="flex items-center gap-1 p-0.5 border border-neutral-200 dark:border-neutral-600 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors">
+                            {adminUser?.photo ? (
+                                <img src={adminUser.photo} alt={adminUser?.name} className="w-8 h-8 rounded object-cover" />
+                            ) : (
+                                <div className="w-8 h-8 rounded flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: 'var(--color-secondary-500)' }}>
+                                    {adminUser?.name?.charAt(0) || 'A'}
+                                </div>
+                            )}
+                            <span className="hidden sm:block text-xs font-semibold leading-tight ml-0.5 mr-1">
+                                {adminUser?.name || 'المسؤول'}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Mobile Drawer Overlay */}
+            {mobileDrawerOpen && (
+                <div className="fixed inset-0 z-[1000] bg-black/50 md:hidden" onClick={handleDrawerToggle}></div>
+            )}
 
             {/* Desktop Sidebar */}
-            <Box
-                component="nav"
-                sx={{
-                    width: sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED,
-                    flexShrink: 0,
-                    display: { xs: 'none', md: 'flex' },
-                    transition: 'width 0.3s ease',
-                    mt: `${APPBAR_HEIGHT}px`
-                }}
-            >
-                <Drawer
-                    variant="permanent"
-                    anchor="left"
-                    sx={{
-                        '& .MuiDrawer-paper': {
-                            boxSizing: 'border-box',
-                            width: sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED,
-                            transition: 'width 0.3s ease',
-                            mt: `${APPBAR_HEIGHT}px`,
-                            position: 'relative'
-                        }
-                    }}
-                    open
-                >
-                    {drawerContent}
-                </Drawer>
-            </Box>
+            <aside className="hidden md:flex flex-shrink-0 mt-16" style={{ width: sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED }}>
+                {sidebarContent}
+            </aside>
 
             {/* Mobile Drawer */}
-            <Drawer
-                variant="temporary"
-                open={mobileDrawerOpen}
-                onClose={handleDrawerToggle}
-                ModalProps={{ keepMounted: true }}
-                anchor="left"
-                sx={{
-                    display: { xs: 'flex', md: 'none' },
-                    '& .MuiDrawer-paper': {
-                        boxSizing: 'border-box',
-                        width: SIDEBAR_EXPANDED,
-                        mt: `${APPBAR_HEIGHT}px`
-                    }
-                }}
-            >
-                {drawerContent}
-            </Drawer>
+            <div className={`fixed top-16 bottom-0 right-0 z-[1001] transition-transform duration-300 md:hidden`}
+                style={{ transform: mobileDrawerOpen ? 'translateX(0)' : 'translateX(100%)' }}>
+                <div style={{ width: SIDEBAR_EXPANDED }}>
+                    {sidebarContent}
+                </div>
+            </div>
 
             {/* Main Content */}
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: { xs: 2, sm: 3 },
-                    minHeight: '100vh',
-                    mt: `${APPBAR_HEIGHT}px`,
-                    width: {
-                        xs: '100%',
-                        md: `calc(100% - ${sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED}px)`
-                    },
-                    transition: 'width 0.3s ease'
-                }}
-            >
+            <main className="flex-grow mt-16 p-3 md:p-4 min-h-screen transition-[width] duration-300 w-full"
+                style={{ width: isMobile ? '100%' : `calc(100% - ${sidebarExpanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED}px)` }}>
                 <Outlet />
-            </Box>
+            </main>
 
             {/* Notification Menu */}
-            <Menu
-                anchorEl={notifAnchorEl}
-                open={Boolean(notifAnchorEl)}
-                onClose={handleNotifClose}
-                PaperProps={{
-                    sx: {
-                        width: 360,
-                        maxHeight: 480,
-                        mt: 1.5,
-                        borderRadius: 2,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                    }
-                }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-                <Box sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider'
-                }}>
-                    <Typography variant="subtitle2" fontWeight="bold">{t('notifications.title')}</Typography>
+            {notifAnchorEl && (
+                <div className="fixed inset-0 z-[1200]" onClick={handleNotifClose}></div>
+            )}
+            <div className={`fixed top-16 left-4 w-[360px] max-h-[480px] bg-white dark:bg-neutral-800 rounded-xl shadow-modal border border-neutral-200 dark:border-neutral-700 z-[1201] overflow-hidden ${notifAnchorEl ? 'block' : 'hidden'}`}>
+                <div className="p-3 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
+                    <span className="text-sm font-bold">{t('notifications.title')}</span>
                     {unreadCount > 0 && (
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                cursor: 'pointer',
-                                color: 'secondary.main',
-                                fontWeight: '600',
-                                '&:hover': { textDecoration: 'underline' }
-                            }}
-                            onClick={markAllAsRead}
-                        >
-                            {t('notifications.markAllRead')}
-                        </Typography>
+                        <button onClick={markAllAsRead} className="text-xs text-secondary-500 font-semibold hover:underline">{t('notifications.markAllRead')}</button>
                     )}
-                </Box>
+                </div>
                 {notifications.length === 0 ? (
-                    <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-                        <i className="fa-solid fa-bell-slash" style={{ fontSize: '2rem', marginBottom: 16, opacity: 0.5 }}></i>
-                        <Typography variant="body2">{t('notifications.empty')}</Typography>
-                    </Box>
+                    <div className="p-4 text-center text-neutral-500">
+                        <i className="fa-solid fa-bell-slash text-2xl mb-4 opacity-50"></i>
+                        <p className="text-sm">{t('notifications.empty')}</p>
+                    </div>
                 ) : (
                     notifications.map(n => (
-                        <MenuItem
-                            key={n.id}
-                            onClick={() => markAsRead(n.id)}
-                            sx={{
-                                py: 1.5,
-                                px: 2,
-                                borderBottom: '1px solid',
-                                borderColor: 'divider',
-                                bgcolor: !n.read ? alpha(theme.palette.secondary.main, 0.05) : 'transparent',
-                                whiteSpace: 'normal',
-                                alignItems: 'flex-start',
-                                gap: 2,
-                                '&:hover': { bgcolor: 'action.hover' }
-                            }}
-                        >
-                            <Box sx={{ color: 'secondary.main', mt: 0.5 }}><i className={n.icon}></i></Box>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle2" fontWeight={!n.read ? '600' : 'normal'}>
-                                    {n.title}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" display="block" sx={{ my: 0.5 }}>
-                                    {n.message}
-                                </Typography>
-                                <Typography variant="caption" color="text.disabled">
-                                    {getTimeAgo(n.time)}
-                                </Typography>
-                            </Box>
-                            {!n.read && <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', mt: 1 }} />}
-                        </MenuItem>
+                        <button key={n.id} onClick={() => markAsRead(n.id)}
+                            className={`w-full text-right p-3 flex gap-3 border-b border-neutral-100 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors ${!n.read ? 'bg-secondary-50/50 dark:bg-secondary-900/20' : ''}`}>
+                            <span className="text-secondary-500 mt-0.5"><i className={n.icon}></i></span>
+                            <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${!n.read ? 'font-semibold' : ''}`}>{n.title}</p>
+                                <p className="text-xs text-neutral-500 my-0.5">{n.message}</p>
+                                <p className="text-xs text-neutral-400">{getTimeAgo(n.time)}</p>
+                            </div>
+                            {!n.read && <span className="w-2 h-2 rounded-full bg-secondary-500 mt-1 flex-shrink-0"></span>}
+                        </button>
                     ))
                 )}
-            </Menu>
+            </div>
 
             {/* Profile Menu */}
-            <Menu
-                anchorEl={profileAnchorEl}
-                open={Boolean(profileAnchorEl)}
-                onClose={handleProfileClose}
-                PaperProps={{
-                    sx: {
-                        width: 280,
-                        mt: 1.5,
-                        borderRadius: 2,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                    }
-                }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-                <Box sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    mb: 1
-                }}>
-                    <Avatar
-                        src={adminUser?.photo}
-                        sx={{ width: 48, height: 48, bgcolor: 'secondary.main' }}
-                    >
-                        {adminUser?.name?.charAt(0) || 'A'}
-                    </Avatar>
-                    <Box>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                            {adminUser?.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {adminUser?.role}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                <MenuItem onClick={() => { photoInputRef.current?.click(); handleProfileClose(); }}>
-                    <ListItemIcon><i className="fa-solid fa-camera"></i></ListItemIcon>
-                    <ListItemText primary={t('account.changePhoto')} />
-                </MenuItem>
-
-                <MenuItem component={Link} to="/admin/settings" onClick={handleProfileClose}>
-                    <ListItemIcon><i className="fa-solid fa-gear"></i></ListItemIcon>
-                    <ListItemText primary="الإعدادات" />
-                </MenuItem>
-
-                <Divider sx={{ my: 1 }} />
-
-                <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                    <ListItemIcon sx={{ color: 'error.main' }}><i className="fa-solid fa-right-from-bracket"></i></ListItemIcon>
-                    <ListItemText primary="تسجيل الخروج" />
-                </MenuItem>
-            </Menu>
+            {profileAnchorEl && (
+                <div className="fixed inset-0 z-[1200]" onClick={handleProfileClose}></div>
+            )}
+            <div className={`fixed top-16 left-4 w-[280px] bg-white dark:bg-neutral-800 rounded-xl shadow-modal border border-neutral-200 dark:border-neutral-700 z-[1201] ${profileAnchorEl ? 'block' : 'hidden'}`}>
+                <div className="p-3 flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-700 mb-1">
+                    {adminUser?.photo ? (
+                        <img src={adminUser.photo} alt={adminUser?.name} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: 'var(--color-secondary-500)' }}>{adminUser?.name?.charAt(0) || 'A'}</div>
+                    )}
+                    <div>
+                        <p className="text-sm font-bold">{adminUser?.name}</p>
+                        <p className="text-xs text-neutral-500">{adminUser?.role}</p>
+                    </div>
+                </div>
+                <button onClick={() => { photoInputRef.current?.click(); handleProfileClose(); }}
+                    className="w-full text-right flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors text-sm">
+                    <i className="fa-solid fa-camera w-5 text-neutral-500"></i>
+                    <span>{t('account.changePhoto')}</span>
+                </button>
+                <Link to="/admin/settings" onClick={handleProfileClose}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors no-underline text-inherit text-sm">
+                    <i className="fa-solid fa-gear w-5 text-neutral-500"></i>
+                    <span>الإعدادات</span>
+                </Link>
+                <div className="border-t border-neutral-200 dark:border-neutral-700 my-1"></div>
+                <button onClick={handleLogout}
+                    className="w-full text-right flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-error-500 text-sm">
+                    <i className="fa-solid fa-right-from-bracket w-5"></i>
+                    <span>تسجيل الخروج</span>
+                </button>
+            </div>
 
             {/* Hidden Photo Input */}
-            <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handlePhotoUpload}
-            />
-        </Box>
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+        </div>
     );
 }
 

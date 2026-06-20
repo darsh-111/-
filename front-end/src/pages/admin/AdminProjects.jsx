@@ -1,18 +1,9 @@
-import { useState, useCallback } from 'react';
-import {
-    Box, Grid, Card, CardContent, Typography, Button, IconButton,
-    TextField, MenuItem, Stack, LinearProgress, Tooltip, useTheme, alpha,
-    Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, List, ListItem, ListItemText, Divider, Select, FormControl, InputLabel
-} from '@mui/material';
+import { useState, useCallback, useEffect } from 'react';
 import { AdminPageHeader, AdminFilterBar, AdminFormDialog, AdminStatusChip } from '../../components/admin';
 import { formatCurrency, t } from '../../i18n';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 
-/**
- * Admin Projects Page — Full CRUD, updates home page in real time
- */
 function AdminProjects() {
-    const theme = useTheme();
     const { state, dispatch } = useAdminData();
     const projectsList = state.projects;
     const programsList = state.programs;
@@ -24,6 +15,13 @@ function AdminProjects() {
     const [updatesModalOpen, setUpdatesModalOpen] = useState(false);
     const [updatesProject, setUpdatesProject] = useState(null);
     const [newUpdateText, setNewUpdateText] = useState('');
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 3500);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const emptyForm = { title: '', programId: '', goal: '', donationAmount: '', location: '', description: '' };
     const [formData, setFormData] = useState(emptyForm);
@@ -142,7 +140,6 @@ function AdminProjects() {
         setSnackbar({ open: true, msg: 'تم حذف التحديث', severity: 'success' });
     };
 
-
     const filteredProjects = filter === 'all' ? projectsList : projectsList.filter(p => p.status === filter);
 
     const tabs = [
@@ -154,8 +151,10 @@ function AdminProjects() {
 
     const updateField = (field) => (e) => setFormData(prev => ({ ...prev, [field]: e.target.value }));
 
+    const inputClass = "w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none";
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.projectsPage.title')}
                 subtitle={t('admin.projectsPage.subtitle')}
@@ -164,115 +163,111 @@ function AdminProjects() {
 
             <AdminFilterBar tabs={tabs} activeTab={filter} onTabChange={(_, v) => setFilter(v)} />
 
-            <Grid container spacing={3}>
+            <div className="grid grid-cols-12 gap-4">
                 {filteredProjects.map(project => {
                     const program = programsList.find(p => p.id === project.programId);
                     const progress = Math.min(Math.round(((project.raised || 0) / (project.goal || 1)) * 100), 100);
                     return (
-                        <Grid item xs={12} sm={6} lg={4} key={project.id}>
-                            <Card elevation={0} sx={{
-                                border: 1, borderColor: project.featured ? '#f59e0b' : 'divider',
-                                height: '100%', display: 'flex', flexDirection: 'column',
-                                ...(project.featured && { boxShadow: '0 0 0 2px #f59e0b40' }),
-                            }}>
-                                <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <Box sx={{
-                                            display: 'flex', alignItems: 'center', gap: 1,
-                                            bgcolor: alpha(program?.color || theme.palette.primary.main, 0.1),
-                                            color: program?.color || 'primary.main',
-                                            px: 1, py: 0.5, borderRadius: 1, fontSize: '0.75rem', fontWeight: 'medium'
-                                        }}>
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-4" key={project.id}>
+                            <div className={`bg-white dark:bg-neutral-800 rounded-lg shadow-card overflow-hidden flex flex-col h-full border ${project.featured ? 'border-amber-500 shadow-[0_0_0_2px_rgba(245,158,11,0.25)]' : 'border-neutral-100 dark:border-neutral-700'}`}>
+                                <div className="p-4 flex-1 flex flex-col gap-2">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: `color-mix(in srgb, ${program?.color || 'var(--color-primary-500)'} 10%, transparent)`, color: program?.color || 'var(--color-primary-500)' }}>
                                             {program?.icon && <i className={program.icon} />}
                                             {program?.name}
-                                        </Box>
-                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                            {project.featured && <i className="fa-solid fa-star" style={{ color: '#f59e0b', fontSize: 12 }} />}
+                                        </div>
+                                        <div className="flex items-center gap-0.5">
+                                            {project.featured && <i className="fa-solid fa-star text-amber-500 text-xs" />}
                                             <AdminStatusChip status={project.status || 'active'} />
-                                        </Stack>
-                                    </Box>
+                                        </div>
+                                    </div>
 
-                                    <Typography variant="h6" fontWeight="bold">{project.title}</Typography>
+                                    <h6 className="font-bold text-base text-neutral-900 dark:text-neutral-100">{project.title}</h6>
 
-                                    <Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="body2" fontWeight="bold" color="primary">{formatCurrency(project.raised || 0)}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{t('admin.projectsPage.from')} {formatCurrency(project.goal)}</Typography>
-                                        </Box>
-                                        <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
+                                    <div>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-sm font-bold text-primary-500">{formatCurrency(project.raised || 0)}</span>
+                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('admin.projectsPage.from')} {formatCurrency(project.goal)}</span>
+                                        </div>
+                                        <div className="w-full h-2 rounded bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                                            <div className="h-full rounded transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: 'var(--color-primary-500)' }} />
+                                        </div>
                                         {project.donationAmount > 0 && (
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
-                                                <i className="fa-solid fa-hand-holding-heart" style={{ fontSize: '0.75rem', color: program?.color || theme.palette.primary.main }} />
-                                                <Typography variant="caption" fontWeight="bold" color="primary">{formatCurrency(project.donationAmount)}</Typography>
-                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>{t('admin.projectsPage.donationAmount')}</Typography>
-                                            </Box>
+                                            <div className="flex items-center gap-0.5 mt-1">
+                                                <i className="fa-solid fa-hand-holding-heart text-xs" style={{ color: program?.color || 'var(--color-primary-500)' }} />
+                                                <span className="text-xs font-bold text-primary-500">{formatCurrency(project.donationAmount)}</span>
+                                                <span className="text-xs text-neutral-500 dark:text-neutral-400" style={{ fontSize: '0.65rem' }}>{t('admin.projectsPage.donationAmount')}</span>
+                                            </div>
                                         )}
-                                    </Box>
+                                    </div>
 
-                                    <Stack direction="row" spacing={2} sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <div className="flex gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                                        <div className="flex items-center gap-0.5">
                                             <i className="fa-solid fa-location-dot" /> {project.location}
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        </div>
+                                        <div className="flex items-center gap-0.5">
                                             <i className="fa-solid fa-users" /> {project.donors || 0} {t('admin.projectsPage.donors')}
-                                        </Box>
-                                    </Stack>
-                                </CardContent>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', gap: 1, alignItems: 'center' }}>
-                                    <FormControl size="small" sx={{ minWidth: 100 }}>
-                                        <Select
-                                            value={project.status || 'draft'}
-                                            onChange={(e) => handleStatusChange(project, e.target.value)}
-                                            sx={{ fontSize: '0.875rem' }}
-                                        >
-                                            <MenuItem value="draft">مسودة</MenuItem>
-                                            <MenuItem value="active">نشط</MenuItem>
-                                            <MenuItem value="completed">مكتمل</MenuItem>
-                                            <MenuItem value="archived">مؤرشف</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                    <Box sx={{ flexGrow: 1 }} />
-                                    <Tooltip title={project.featured ? t('admin.projectsPage.removeFeatured') : t('admin.projectsPage.addFeatured')}>
-                                        <IconButton size="small" onClick={() => toggleFeatured(project)}
-                                            sx={{
-                                                color: project.featured ? '#f59e0b' : 'text.disabled',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': { color: project.featured ? '#d97706' : '#f59e0b', transform: 'scale(1.15)' },
-                                            }}>
-                                            <i className={project.featured ? 'fa-solid fa-star' : 'fa-regular fa-star'} />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="تحديثات المشروع">
-                                        <IconButton size="small" color="info" onClick={() => handleManageUpdates(project)}>
-                                            <i className="fa-solid fa-bullhorn" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title={t('admin.projectsPage.edit')}>
-                                        <IconButton size="small" color="primary" onClick={() => handleEdit(project)}>
-                                            <i className="fa-solid fa-pen-to-square" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title={t('common.delete')}>
-                                        <IconButton size="small" color="error" onClick={() => handleDelete(project)}>
-                                            <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Box>
-                            </Card>
-                        </Grid>
+                                <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex gap-1 items-center">
+                                    <select
+                                        value={project.status || 'draft'}
+                                        onChange={(e) => handleStatusChange(project, e.target.value)}
+                                        className="text-sm px-2 py-1.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none min-w-[100px]"
+                                    >
+                                        <option value="draft">مسودة</option>
+                                        <option value="active">نشط</option>
+                                        <option value="completed">مكتمل</option>
+                                        <option value="archived">مؤرشف</option>
+                                    </select>
+                                    <div className="flex-1" />
+                                    <button
+                                        title={project.featured ? t('admin.projectsPage.removeFeatured') : t('admin.projectsPage.addFeatured')}
+                                        className="p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-all"
+                                        style={{ color: project.featured ? '#f59e0b' : 'var(--color-neutral-400)' }}
+                                        onClick={() => toggleFeatured(project)}
+                                        onMouseEnter={e => { e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.transform = 'scale(1.15)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.color = project.featured ? '#f59e0b' : 'var(--color-neutral-400)'; e.currentTarget.style.transform = ''; }}
+                                    >
+                                        <i className={project.featured ? 'fa-solid fa-star' : 'fa-regular fa-star'} />
+                                    </button>
+                                    <button
+                                        title="تحديثات المشروع"
+                                        className="p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-primary-500"
+                                        onClick={() => handleManageUpdates(project)}
+                                    >
+                                        <i className="fa-solid fa-bullhorn" style={{ fontSize: 14 }} />
+                                    </button>
+                                    <button
+                                        title={t('admin.projectsPage.edit')}
+                                        className="p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-primary-500"
+                                        onClick={() => handleEdit(project)}
+                                    >
+                                        <i className="fa-solid fa-pen-to-square" style={{ fontSize: 14 }} />
+                                    </button>
+                                    <button
+                                        title={t('common.delete')}
+                                        className="p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-error-500"
+                                        onClick={() => handleDelete(project)}
+                                    >
+                                        <i className="fa-solid fa-trash" style={{ fontSize: 14 }} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     );
                 })}
-            </Grid>
+            </div>
 
             {filteredProjects.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
+                <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
                     <i className="fa-solid fa-folder-open" style={{ fontSize: 48, opacity: 0.3 }} />
-                    <Typography sx={{ mt: 2 }}>لا توجد مشاريع في هذه الفئة</Typography>
-                </Box>
+                    <p className="mt-2">لا توجد مشاريع في هذه الفئة</p>
+                </div>
             )}
 
-            {/* Add/Edit Modal */}
             <AdminFormDialog
                 open={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setFormData(emptyForm); }}
@@ -281,93 +276,130 @@ function AdminProjects() {
                 submitLabel={editProject ? t('admin.programsPage.saveChanges') : t('admin.projectsPage.createBtn')}
                 maxWidth="md"
             >
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-                    <TextField label={t('admin.projectsPage.titleLabel')} fullWidth required value={formData.title} onChange={updateField('title')} />
-                    <TextField select label={t('admin.projectsPage.programLabel')} fullWidth value={formData.programId} onChange={updateField('programId')}>
-                        {programsList.map(p => <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>)}
-                    </TextField>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-                    <TextField label={t('admin.projectsPage.goalLabel')} type="number" fullWidth required value={formData.goal} onChange={updateField('goal')} />
-                    <TextField label={t('admin.projectsPage.donationAmountLabel')} type="number" fullWidth value={formData.donationAmount} onChange={updateField('donationAmount')} />
-                </Box>
-                <TextField label={t('admin.projectsPage.locationLabel')} fullWidth value={formData.location} onChange={updateField('location')} />
-                <TextField label={t('admin.projectsPage.descLabel')} multiline rows={4} fullWidth value={formData.description} onChange={updateField('description')} />
-                <Box sx={{
-                    border: '2px dashed', borderColor: 'divider', borderRadius: 2, p: 3,
-                    textAlign: 'center', bgcolor: 'action.hover', cursor: 'pointer',
-                }}>
-                    <Typography variant="body2" color="text.secondary">
-                        <i className="fa-solid fa-camera" style={{ marginInlineEnd: 8 }} />{t('admin.projectsPage.imageUpload')}
-                    </Typography>
-                </Box>
+                <div className="flex flex-col md:flex-row gap-2">
+                    <input className={inputClass} placeholder={t('admin.projectsPage.titleLabel')} required value={formData.title} onChange={updateField('title')} />
+                    <select className={inputClass} value={formData.programId} onChange={updateField('programId')}>
+                        <option value="">{t('admin.projectsPage.programLabel')}</option>
+                        {programsList.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                </div>
+                <div className="flex flex-col md:flex-row gap-2">
+                    <input className={inputClass} type="number" placeholder={t('admin.projectsPage.goalLabel')} required value={formData.goal} onChange={updateField('goal')} />
+                    <input className={inputClass} type="number" placeholder={t('admin.projectsPage.donationAmountLabel')} value={formData.donationAmount} onChange={updateField('donationAmount')} />
+                </div>
+                <input className={inputClass} placeholder={t('admin.projectsPage.locationLabel')} value={formData.location} onChange={updateField('location')} />
+                <textarea className={inputClass + " resize-none"} rows={4} placeholder={t('admin.projectsPage.descLabel')} value={formData.description} onChange={updateField('description')} />
+                <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-3 text-center bg-neutral-50 dark:bg-neutral-800/50 cursor-pointer text-neutral-500 dark:text-neutral-400 text-sm">
+                    <i className="fa-solid fa-camera ml-1" />{t('admin.projectsPage.imageUpload')}
+                </div>
             </AdminFormDialog>
 
-            {/* Delete Confirmation */}
-            <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, project: null })}>
-                <DialogTitle>تأكيد الحذف</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        هل أنت متأكد من حذف مشروع "{deleteConfirm.project?.title}"؟
-                        {deleteConfirm.project?.raised > 0 && (
-                            <Typography color="error" sx={{ mt: 2, fontWeight: 'bold' }}>
-                                تحذير: هذا المشروع يحتوي على تبرعات بقيمة {formatCurrency(deleteConfirm.project.raised)}! 
-                                حذفه قد يؤدي إلى فقدان السجلات المرتبطة به.
-                            </Typography>
-                        )}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDeleteConfirm({ open: false, project: null })} color="inherit">إلغاء</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained">حذف نهائياً</Button>
-                </DialogActions>
-            </Dialog>
+            {deleteConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirm({ open: false, project: null })} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">تأكيد الحذف</h2>
+                        <div className="p-4">
+                            <p className="text-neutral-700 dark:text-neutral-300">
+                                هل أنت متأكد من حذف مشروع "{deleteConfirm.project?.title}"؟
+                            </p>
+                            {deleteConfirm.project?.raised > 0 && (
+                                <p className="mt-2 font-bold text-error-500">
+                                    تحذير: هذا المشروع يحتوي على تبرعات بقيمة {formatCurrency(deleteConfirm.project.raised)}!
+                                    حذفه قد يؤدي إلى فقدان السجلات المرتبطة به.
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button
+                                onClick={() => setDeleteConfirm({ open: false, project: null })}
+                                className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-5 py-2 rounded-md font-semibold bg-error-500 text-white hover:bg-error-600 transition-colors"
+                            >
+                                حذف نهائياً
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Updates Modal */}
-            <Dialog open={updatesModalOpen} onClose={() => setUpdatesModalOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>إدارة تحديثات المشروع: {updatesProject?.title}</DialogTitle>
-                <DialogContent dividers>
-                    <List disablePadding>
-                        {(!updatesProject?.updates || updatesProject.updates.length === 0) ? (
-                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>لا توجد تحديثات حالياً</Typography>
-                        ) : (
-                            updatesProject.updates.map((update, i) => (
-                                <Box key={update.id}>
-                                    <ListItem
-                                        secondaryAction={
-                                            <IconButton edge="end" size="small" color="error" onClick={() => handleDeleteUpdate(update.id)}>
-                                                <i className="fa-solid fa-trash" style={{ fontSize: 12 }} />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemText
-                                            primary={update.text}
-                                            secondary={update.date}
-                                        />
-                                    </ListItem>
-                                    {i < updatesProject.updates.length - 1 && <Divider />}
-                                </Box>
-                            ))
-                        )}
-                    </List>
-                    <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
-                        <TextField
-                            fullWidth size="small" label="تحديث جديد..."
-                            value={newUpdateText} onChange={(e) => setNewUpdateText(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddUpdate(); }}
-                        />
-                        <Button variant="contained" onClick={handleAddUpdate}>إضافة</Button>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setUpdatesModalOpen(false)}>إغلاق</Button>
-                </DialogActions>
-            </Dialog>
+            {updatesModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setUpdatesModalOpen(false)} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">إدارة تحديثات المشروع: {updatesProject?.title}</h2>
+                        <div className="p-4 overflow-y-auto max-h-[50vh]">
+                            {(!updatesProject?.updates || updatesProject.updates.length === 0) ? (
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-2">لا توجد تحديثات حالياً</p>
+                            ) : (
+                                <div>
+                                    {updatesProject.updates.map((update, i) => (
+                                        <div key={update.id}>
+                                            <div className="flex items-center py-2 gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm text-neutral-900 dark:text-neutral-100">{update.text}</p>
+                                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{update.date}</p>
+                                                </div>
+                                                <button
+                                                    className="p-1.5 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors text-error-500"
+                                                    onClick={() => handleDeleteUpdate(update.id)}
+                                                >
+                                                    <i className="fa-solid fa-trash" style={{ fontSize: 12 }} />
+                                                </button>
+                                            </div>
+                                            {i < updatesProject.updates.length - 1 && <hr className="border-t border-neutral-200 dark:border-neutral-700" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="mt-3 flex gap-1">
+                                <input
+                                    className={inputClass}
+                                    placeholder="تحديث جديد..."
+                                    value={newUpdateText}
+                                    onChange={(e) => setNewUpdateText(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddUpdate(); }}
+                                />
+                                <button
+                                    onClick={handleAddUpdate}
+                                    className="px-4 py-2 rounded-md font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors text-sm whitespace-nowrap"
+                                >
+                                    إضافة
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button
+                                onClick={() => setUpdatesModalOpen(false)}
+                                className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 ${
+                        snackbar.severity === 'success' ? 'bg-success-500 text-white' :
+                        snackbar.severity === 'error' ? 'bg-error-500 text-white' :
+                        'bg-primary-500 text-white'
+                    }`}>
+                        <span>{snackbar.msg}</span>
+                        <button className="text-white/80 hover:text-white mr-2" onClick={() => setSnackbar(s => ({ ...s, open: false }))}>
+                            <i className="fa-solid fa-xmark" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

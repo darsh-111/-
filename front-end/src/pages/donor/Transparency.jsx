@@ -1,107 +1,13 @@
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    LinearProgress,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Chip,
-    Link,
-    Stack,
-    useTheme,
-    alpha
-} from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { formatCurrency } from '../../i18n';
-import styled from '@emotion/styled';
 
-// --- Styled Components ---
+const primaryMain = '#00b16a';
+const primaryDark = '#009659';
+const primaryLight = '#33c489';
 
-const HeroSection = styled(Box)(({ theme }) => ({
-    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-    color: theme.palette.common.white,
-    padding: theme.spacing(12, 0),
-    textAlign: 'center',
-}));
-
-const StatCard = styled(Paper)(({ theme, highlight }) => ({
-    padding: theme.spacing(3),
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1),
-    height: '100%',
-    justifyContent: 'center',
-    borderRadius: theme.shape.borderRadius * 2,
-    ...(highlight && {
-        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-        color: theme.palette.common.white,
-        '& .MuiTypography-root': {
-            color: 'inherit',
-        },
-        '& .stat-label': {
-            color: 'rgba(255, 255, 255, 0.9)',
-        }
-    }),
-}));
-
-const PieChart = styled(Box)(({ theme }) => ({
-    width: 200,
-    height: 200,
-    borderRadius: '50%',
-    background: `conic-gradient(
-    ${theme.palette.primary.main} 0deg 316deg,
-    ${theme.palette.grey[400]} 316deg 349deg,
-    ${theme.palette.secondary.main} 349deg 360deg
-  )`,
-    margin: '0 auto',
-    marginBottom: theme.spacing(3),
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-}));
-
-const PieCenter = styled(Box)(({ theme }) => ({
-    width: 100,
-    height: 100,
-    background: theme.palette.background.paper,
-    borderRadius: '50%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-}));
-
-const LegendColor = styled(Box)(({ color }) => ({
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    backgroundColor: color,
-}));
-
-const GovernanceCard = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(4),
-    textAlign: 'center',
-    height: '100%',
-    borderRadius: theme.shape.borderRadius * 2,
-}));
-
-/**
- * Transparency Page - الشفافية
- */
 function Transparency() {
-    const theme = useTheme();
+    const { isDark } = useTheme();
 
-    // Mock financial data
     const financialData = {
         totalDonations: 15234567,
         totalSpent: 14123456,
@@ -111,12 +17,20 @@ function Transparency() {
         beneficiaries: 48520,
     };
 
+    const programColors = {
+        primary: primaryMain,
+        success: '#22c55e',
+        secondary: '#6366f1',
+        error: '#ef4444',
+        info: '#3b82f6',
+    };
+
     const programBreakdown = [
-        { name: 'رعاية الأيتام', amount: 4500000, percentage: 36, color: theme.palette.primary.main },
-        { name: 'الرعاية الصحية', amount: 2800000, percentage: 22, color: theme.palette.success.main },
-        { name: 'التعليم', amount: 2200000, percentage: 18, color: theme.palette.secondary.main },
-        { name: 'الإغاثة العاجلة', amount: 1800000, percentage: 14, color: theme.palette.error.main },
-        { name: 'التنمية المجتمعية', amount: 1200000, percentage: 10, color: theme.palette.info.main },
+        { name: 'رعاية الأيتام', amount: 4500000, percentage: 36, color: programColors.primary },
+        { name: 'الرعاية الصحية', amount: 2800000, percentage: 22, color: programColors.success },
+        { name: 'التعليم', amount: 2200000, percentage: 18, color: programColors.secondary },
+        { name: 'الإغاثة العاجلة', amount: 1800000, percentage: 14, color: programColors.error },
+        { name: 'التنمية المجتمعية', amount: 1200000, percentage: 10, color: programColors.info },
     ];
 
     const auditors = [
@@ -127,254 +41,237 @@ function Transparency() {
     ];
 
     return (
-        <Box sx={{ pb: 12 }}>
+        <div className="pb-12 bg-white dark:bg-[#0f172a]">
             {/* Hero */}
-            <HeroSection>
-                <Container>
-                    <Typography variant="h3" fontWeight="bold" gutterBottom component="h1">
+            <div className="text-white text-center py-12 md:py-16" style={{
+                background: `linear-gradient(135deg, ${primaryMain}, ${primaryDark})`,
+            }}>
+                <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-3">
                         الشفافية والمساءلة
-                    </Typography>
-                    <Typography variant="h6" sx={{ opacity: 0.9, maxWidth: 700, mx: 'auto' }}>
+                    </h1>
+                    <p className="text-base md:text-lg opacity-90 max-w-[700px] mx-auto">
                         نؤمن بحق المتبرعين في معرفة كيف تُستخدم أموالهم. نلتزم بالإفصاح الكامل عن جميع عملياتنا المالية
-                    </Typography>
-                </Container>
-            </HeroSection>
+                    </p>
+                </div>
+            </div>
 
-            <Container sx={{ mt: -6, position: 'relative', zIndex: 2 }}>
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6 -mt-6 relative z-10">
                 {/* Financial Overview */}
-                <Box sx={{ mb: 12 }}>
-                    <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 6, display: 'none' }}>
-                        نظرة عامة مالية
-                    </Typography>
-                    <Grid container spacing={3}>
-                        <Grid item xs={6} md={3}>
-                            <StatCard elevation={3}>
-                                <Box sx={{ fontSize: 32, color: 'primary.main', mb: 1 }}>
+                <div className="mb-12">
+                    <h4 className="text-xl font-bold text-center mb-6 hidden">نظرة عامة مالية</h4>
+                    <div className="grid grid-cols-12 gap-3">
+                        <div className="col-span-6 md:col-span-3">
+                            <div className={`p-3 text-center flex flex-col gap-1 h-full justify-center rounded-2xl ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                                <div className="text-3xl mb-1" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-coins"></i>
-                                </Box>
-                                <Typography variant="h5" fontWeight="bold" color="text.primary">
+                                </div>
+                                <h5 className="text-xl font-bold" style={{ color: isDark ? '#e2e8f0' : '#1a1a2e' }}>
                                     {formatCurrency(financialData.totalDonations)}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h5>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     إجمالي التبرعات
-                                </Typography>
-                            </StatCard>
-                        </Grid>
-                        <Grid item xs={6} md={3}>
-                            <StatCard elevation={3}>
-                                <Box sx={{ fontSize: 32, color: 'primary.main', mb: 1 }}>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="col-span-6 md:col-span-3">
+                            <div className={`p-3 text-center flex flex-col gap-1 h-full justify-center rounded-2xl ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                                <div className="text-3xl mb-1" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-chart-pie"></i>
-                                </Box>
-                                <Typography variant="h5" fontWeight="bold" color="text.primary">
+                                </div>
+                                <h5 className="text-xl font-bold" style={{ color: isDark ? '#e2e8f0' : '#1a1a2e' }}>
                                     {formatCurrency(financialData.totalSpent)}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h5>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     إجمالي المصروفات
-                                </Typography>
-                            </StatCard>
-                        </Grid>
-                        <Grid item xs={6} md={3}>
-                            <StatCard elevation={3} highlight={1}>
-                                <Box sx={{ fontSize: 32, mb: 1 }}>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="col-span-6 md:col-span-3">
+                            <div className="p-3 text-center flex flex-col gap-1 h-full justify-center rounded-2xl text-white" style={{
+                                background: `linear-gradient(135deg, ${primaryMain}, ${primaryLight})`,
+                            }}>
+                                <div className="text-3xl mb-1">
                                     <i className="fa-solid fa-bullseye"></i>
-                                </Box>
-                                <Typography variant="h4" fontWeight="bold">
-                                    88%
-                                </Typography>
-                                <Typography variant="body2" className="stat-label">
-                                    نسبة الإنفاق على البرامج
-                                </Typography>
-                            </StatCard>
-                        </Grid>
-                        <Grid item xs={6} md={3}>
-                            <StatCard elevation={3}>
-                                <Box sx={{ fontSize: 32, color: 'primary.main', mb: 1 }}>
+                                </div>
+                                <h4 className="text-2xl font-bold">88%</h4>
+                                <p className="text-sm opacity-90">نسبة الإنفاق على البرامج</p>
+                            </div>
+                        </div>
+                        <div className="col-span-6 md:col-span-3">
+                            <div className={`p-3 text-center flex flex-col gap-1 h-full justify-center rounded-2xl ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                                <div className="text-3xl mb-1" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-users"></i>
-                                </Box>
-                                <Typography variant="h5" fontWeight="bold" color="text.primary">
+                                </div>
+                                <h5 className="text-xl font-bold" style={{ color: isDark ? '#e2e8f0' : '#1a1a2e' }}>
                                     {financialData.beneficiaries.toLocaleString('ar-EG')}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h5>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     مستفيد
-                                </Typography>
-                            </StatCard>
-                        </Grid>
-                    </Grid>
-                </Box>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Expense Breakdown */}
-                <Box sx={{ mb: 12 }}>
-                    <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 6 }}>
+                <div className="mb-12">
+                    <h4 className="text-xl font-bold text-center mb-6" style={{ color: isDark ? '#f1f5f9' : '#1a1a2e' }}>
                         توزيع المصروفات
-                    </Typography>
-                    <Grid container justifyContent="center">
-                        <Grid item xs={12} md={8}>
-                            <Paper sx={{ p: 4, borderRadius: 4 }}>
-                                <PieChart>
-                                    <PieCenter>
-                                        <Typography variant="body2" color="text.secondary">
-                                            البرامج
-                                        </Typography>
-                                    </PieCenter>
-                                </PieChart>
-                                <Stack spacing={2} sx={{ maxWidth: 300, mx: 'auto' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <LegendColor color={theme.palette.primary.main} />
-                                        <Typography variant="body2" sx={{ flex: 1 }}>مصروفات البرامج</Typography>
-                                        <Typography variant="subtitle2">88%</Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <LegendColor color={theme.palette.grey[400]} />
-                                        <Typography variant="body2" sx={{ flex: 1 }}>مصروفات إدارية</Typography>
-                                        <Typography variant="subtitle2">9%</Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <LegendColor color={theme.palette.secondary.main} />
-                                        <Typography variant="body2" sx={{ flex: 1 }}>تكاليف جمع التبرعات</Typography>
-                                        <Typography variant="subtitle2">3%</Typography>
-                                    </Box>
-                                </Stack>
-                            </Paper>
-                        </Grid>
-                    </Grid>
-                </Box>
+                    </h4>
+                    <div className="flex justify-center">
+                        <div className="w-full md:w-2/3">
+                            <div className={`p-4 rounded-2xl ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                                <div className="w-[200px] h-[200px] rounded-full mx-auto mb-3 relative flex items-center justify-center" style={{
+                                    background: `conic-gradient(${primaryMain} 0deg 316deg, ${isDark ? '#4a5568' : '#cbd5e1'} 316deg 349deg, ${programColors.secondary} 349deg 360deg)`,
+                                }}>
+                                    <div className={`w-[100px] h-[100px] rounded-full flex flex-col items-center justify-center z-10 ${isDark ? 'bg-[#0f172a]' : 'bg-white'}`}>
+                                        <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>البرامج</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2 max-w-[300px] mx-auto">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded" style={{ backgroundColor: primaryMain }}></div>
+                                        <p className="text-sm flex-1" style={{ color: isDark ? '#e2e8f0' : '#333' }}>مصروفات البرامج</p>
+                                        <p className="text-sm font-medium" style={{ color: isDark ? '#e2e8f0' : '#333' }}>88%</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded" style={{ backgroundColor: isDark ? '#4a5568' : '#cbd5e1' }}></div>
+                                        <p className="text-sm flex-1" style={{ color: isDark ? '#e2e8f0' : '#333' }}>مصروفات إدارية</p>
+                                        <p className="text-sm font-medium" style={{ color: isDark ? '#e2e8f0' : '#333' }}>9%</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded" style={{ backgroundColor: programColors.secondary }}></div>
+                                        <p className="text-sm flex-1" style={{ color: isDark ? '#e2e8f0' : '#333' }}>تكاليف جمع التبرعات</p>
+                                        <p className="text-sm font-medium" style={{ color: isDark ? '#e2e8f0' : '#333' }}>3%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Program Breakdown */}
-                <Box sx={{ mb: 12 }}>
-                    <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 6 }}>
+                <div className="mb-12">
+                    <h4 className="text-xl font-bold text-center mb-6" style={{ color: isDark ? '#f1f5f9' : '#1a1a2e' }}>
                         توزيع الإنفاق على البرامج
-                    </Typography>
-                    <Paper sx={{ p: 4, borderRadius: 4 }}>
-                        <Stack spacing={4}>
+                    </h4>
+                    <div className={`p-4 rounded-2xl ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                        <div className="flex flex-col gap-4">
                             {programBreakdown.map((program, index) => (
-                                <Box key={index}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="medium">
+                                <div key={index}>
+                                    <div className="flex justify-between mb-1">
+                                        <p className="text-sm font-medium" style={{ color: isDark ? '#e2e8f0' : '#333' }}>
                                             {program.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
+                                        </p>
+                                        <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                             {formatCurrency(program.amount)}
-                                        </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={program.percentage}
-                                        sx={{
-                                            height: 10,
-                                            borderRadius: 5,
-                                            backgroundColor: alpha(program.color, 0.1),
-                                            '& .MuiLinearProgress-bar': {
-                                                backgroundColor: program.color,
-                                                borderRadius: 5,
-                                            }
-                                        }}
-                                    />
-                                </Box>
+                                        </p>
+                                    </div>
+                                    <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: `${program.color}1a` }}>
+                                        <div className="h-full rounded-full transition-all" style={{ width: `${program.percentage}%`, backgroundColor: program.color }}></div>
+                                    </div>
+                                </div>
                             ))}
-                        </Stack>
-                    </Paper>
-                </Box>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Audit Reports */}
-                <Box sx={{ mb: 12 }}>
-                    <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 6 }}>
+                <div className="mb-12">
+                    <h4 className="text-xl font-bold text-center mb-6" style={{ color: isDark ? '#f1f5f9' : '#1a1a2e' }}>
                         تقارير المراجعة
-                    </Typography>
-                    <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: 'hidden' }}>
-                        <Table>
-                            <TableHead sx={{ bgcolor: 'grey.50' }}>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>السنة</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>مكتب المراجعة</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>الحالة</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>التقرير</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
+                    </h4>
+                    <div className={`rounded-2xl overflow-hidden ${isDark ? 'bg-[#1e293b]' : 'bg-white'} shadow-lg`}>
+                        <table className="w-full border-collapse">
+                            <thead style={{ backgroundColor: isDark ? '#1a2332' : '#f8fafc' }}>
+                                <tr>
+                                    <th className="p-3 text-sm font-bold text-right">السنة</th>
+                                    <th className="p-3 text-sm font-bold text-right">مكتب المراجعة</th>
+                                    <th className="p-3 text-sm font-bold text-right">الحالة</th>
+                                    <th className="p-3 text-sm font-bold text-right">التقرير</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {auditors.map((audit, index) => (
-                                    <TableRow key={index} hover>
-                                        <TableCell>{audit.year}</TableCell>
-                                        <TableCell>{audit.firm}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={audit.status}
-                                                color={audit.status === 'معتمد' ? 'success' : 'warning'}
-                                                size="small"
-                                                variant="soft"
-                                                sx={{
-                                                    fontWeight: 'medium',
-                                                    bgcolor: audit.status === 'معتمد' ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
-                                                    color: audit.status === 'معتمد' ? 'success.dark' : 'warning.dark',
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
+                                    <tr key={index} className={`transition-colors ${isDark ? 'hover:bg-[#1a2332]' : 'hover:bg-gray-50'}`} style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}` }}>
+                                        <td className="p-3 text-sm" style={{ color: isDark ? '#e2e8f0' : '#333' }}>{audit.year}</td>
+                                        <td className="p-3 text-sm" style={{ color: isDark ? '#e2e8f0' : '#333' }}>{audit.firm}</td>
+                                        <td className="p-3">
+                                            <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium" style={{
+                                                backgroundColor: audit.status === 'معتمد' ? 'rgba(34,197,94,0.1)' : 'rgba(234,179,8,0.1)',
+                                                color: audit.status === 'معتمد' ? '#16a34a' : '#ca8a04',
+                                            }}>
+                                                {audit.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-3">
                                             {audit.status === 'معتمد' ? (
-                                                <Link href="#" underline="hover" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <a href="#" className="flex items-center gap-1 text-sm hover:underline" style={{ color: primaryMain }}>
                                                     <i className="fa-solid fa-file-pdf"></i> تحميل
-                                                </Link>
+                                                </a>
                                             ) : (
-                                                <Typography variant="body2" color="text.disabled">
+                                                <p className="text-sm" style={{ color: isDark ? 'rgba(148,163,184,0.5)' : 'rgba(0,0,0,0.38)' }}>
                                                     قريباً
-                                                </Typography>
+                                                </p>
                                             )}
-                                        </TableCell>
-                                    </TableRow>
+                                        </td>
+                                    </tr>
                                 ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Box>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 {/* Governance */}
-                <Box>
-                    <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 6 }}>
+                <div className="mb-12">
+                    <h4 className="text-xl font-bold text-center mb-6" style={{ color: isDark ? '#f1f5f9' : '#1a1a2e' }}>
                         الحوكمة والرقابة
-                    </Typography>
-                    <Grid container spacing={4}>
-                        <Grid item xs={12} md={4}>
-                            <GovernanceCard elevation={2}>
-                                <Box sx={{ fontSize: 40, color: 'primary.main', mb: 2 }}>
+                    </h4>
+                    <div className="grid grid-cols-12 gap-4">
+                        <div className="col-span-12 md:col-span-4">
+                            <div className={`p-4 text-center h-full rounded-2xl shadow ${isDark ? 'bg-[#1e293b]' : 'bg-white'}`}>
+                                <div className="text-4xl mb-2" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-clipboard-list"></i>
-                                </Box>
-                                <Typography variant="h6" gutterBottom>
+                                </div>
+                                <h6 className="text-base font-bold mb-2" style={{ color: isDark ? '#e2e8f0' : '#333' }}>
                                     مجلس الإدارة
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h6>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     مجلس مستقل من 7 أعضاء يجتمع شهريًا لمراجعة الأداء واتخاذ القرارات الاستراتيجية
-                                </Typography>
-                            </GovernanceCard>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                            <GovernanceCard elevation={2}>
-                                <Box sx={{ fontSize: 40, color: 'primary.main', mb: 2 }}>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="col-span-12 md:col-span-4">
+                            <div className={`p-4 text-center h-full rounded-2xl shadow ${isDark ? 'bg-[#1e293b]' : 'bg-white'}`}>
+                                <div className="text-4xl mb-2" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-shield-halved"></i>
-                                </Box>
-                                <Typography variant="h6" gutterBottom>
+                                </div>
+                                <h6 className="text-base font-bold mb-2" style={{ color: isDark ? '#e2e8f0' : '#333' }}>
                                     لجنة المراجعة
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h6>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     لجنة مستقلة تراجع البيانات المالية والالتزام بالسياسات والإجراءات
-                                </Typography>
-                            </GovernanceCard>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                            <GovernanceCard elevation={2}>
-                                <Box sx={{ fontSize: 40, color: 'primary.main', mb: 2 }}>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="col-span-12 md:col-span-4">
+                            <div className={`p-4 text-center h-full rounded-2xl shadow ${isDark ? 'bg-[#1e293b]' : 'bg-white'}`}>
+                                <div className="text-4xl mb-2" style={{ color: primaryMain }}>
                                     <i className="fa-solid fa-scale-balanced"></i>
-                                </Box>
-                                <Typography variant="h6" gutterBottom>
+                                </div>
+                                <h6 className="text-base font-bold mb-2" style={{ color: isDark ? '#e2e8f0' : '#333' }}>
                                     الامتثال
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                </h6>
+                                <p className="text-sm" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                                     نلتزم بجميع القوانين المصرية المنظمة للعمل الأهلي ومعايير الشفافية الدولية
-                                </Typography>
-                            </GovernanceCard>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </Container>
-        </Box>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

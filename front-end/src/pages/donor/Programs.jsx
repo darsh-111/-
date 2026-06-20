@@ -1,167 +1,84 @@
 import { Link } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    Button,
-    Stack,
-    useTheme,
-    alpha
-} from '@mui/material';
 import { t } from '../../i18n';
 import { useAdminData } from '../../contexts/AdminDataContext';
-import styled from '@emotion/styled';
-
-// --- Styled Components ---
-
-const HeroSection = styled(Box)(({ theme }) => ({
-    background: `linear-gradient(135deg, ${theme.palette.hero.base} 0%, ${theme.palette.hero.dark} 100%)`,
-    color: theme.palette.common.white,
-    padding: theme.spacing(12, 0),
-    textAlign: 'center',
-}));
-
-const ProgramCard = styled(Card)(({ theme, programColor }) => ({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    borderRadius: theme.shape.borderRadius * 2,
-    overflow: 'visible',
-    marginTop: theme.spacing(4),
-    '&:hover': {
-        transform: 'translateY(-8px)',
-        boxShadow: theme.shadows[8],
-    },
-}));
-
-const ProgramIconWrapper = styled(Box)(({ theme, bgcolor }) => ({
-    width: 80,
-    height: 80,
-    borderRadius: '50%',
-    backgroundColor: bgcolor,
-    color: theme.palette.common.white,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 32,
-    margin: '-40px auto 0',
-    boxShadow: theme.shadows[3],
-    border: `4px solid ${theme.palette.background.paper}`,
-}));
 
 function Programs() {
-    const theme = useTheme();
     const { state } = useAdminData();
     const activePrograms = state.programs?.filter(p => !p.status || p.status === 'active') || [];
-    const programs = activePrograms;       // only active programs
-    const projects = state.projects;       // projects from context
+    const programs = activePrograms;
+    const projects = state.projects;
 
     return (
-        <Box sx={{ pb: 12 }}>
-            {/* Hero */}
-            <HeroSection>
-                <Container>
-                    <Typography
-                        variant="h3"
-                        fontWeight="bold"
-                        gutterBottom
-                        component="h1"
-                    >
-                        {t('nav.programs')}
-                    </Typography>
-                    <Typography
-                        variant="h6"
-                        sx={{ opacity: 0.9, maxWidth: 700, mx: 'auto' }}
-                    >
+        <div className="pb-12">
+            <div style={{ background: 'linear-gradient(135deg, #1a4a44 0%, #0a1f1c 100%)' }} className="text-white py-20 text-center">
+                <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+                    <h1 className="text-3xl font-bold mb-2">{t('nav.programs')}</h1>
+                    <p className="text-lg opacity-90 max-w-[700px] mx-auto">
                         اكتشف برامجنا المتنوعة التي تستهدف مختلف فئات المحتاجين في المجتمع المصري
-                    </Typography>
-                </Container>
-            </HeroSection>
+                    </p>
+                </div>
+            </div>
 
-            {/* Programs Grid */}
-            <Container sx={{ mt: -4 }}>
-                <Grid container spacing={4}>
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6 -mt-4">
+                <div className="grid grid-cols-12 gap-4">
                     {programs.map(program => {
                         const programProjects = projects.filter(p => p.programId === program.id);
                         const totalRaised = programProjects.reduce((sum, p) => sum + p.raised, 0);
 
                         return (
-                            <Grid item xs={12} sm={6} md={4} key={program.id}>
-                                <ProgramCard elevation={2}>
-                                    <ProgramIconWrapper bgcolor={program.color}>
+                            <div className="col-span-12 sm:col-span-6 md:col-span-4" key={program.id}>
+                                <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-card border border-neutral-100 dark:border-neutral-700 overflow-visible mt-4 h-full flex flex-col transition-transform duration-300 ease hover:-translate-y-2 hover:shadow-lg">
+                                    <div
+                                        className="w-20 h-20 rounded-full flex items-center justify-center text-3xl text-white mx-auto -mt-10 shadow-md border-4 border-white dark:border-neutral-800"
+                                        style={{ backgroundColor: program.color }}
+                                    >
                                         <i className={program.icon}></i>
-                                    </ProgramIconWrapper>
-                                    <CardContent sx={{ flex: 1, textAlign: 'center', pt: 3, px: 3 }}>
-                                        <Typography variant="h5" fontWeight="bold" gutterBottom>
+                                    </div>
+                                    <div className="p-4 pt-3 flex-1 text-center">
+                                        <h5 className="text-lg font-bold mb-1">
                                             {program.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" paragraph sx={{ minHeight: 60 }}>
+                                        </h5>
+                                        <p className="text-sm text-neutral-500 dark:text-neutral-400 min-h-[60px] mb-3">
                                             {getProgramDescription(program.id)}
-                                        </Typography>
+                                        </p>
 
-                                        <DividerWithText />
+                                        <hr className="w-3/5 mx-auto border-t border-neutral-200 dark:border-neutral-700 mb-3" />
 
-                                        <Stack
-                                            direction="row"
-                                            justifyContent="space-around"
-                                            sx={{ my: 3 }}
-                                        >
-                                            <Box>
-                                                <Typography variant="h6" fontWeight="bold" color="primary.main">
+                                        <div className="flex justify-around my-3">
+                                            <div>
+                                                <h6 className="text-lg font-bold text-primary-500">
                                                     {programProjects.length}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
+                                                </h6>
+                                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
                                                     مشروع نشط
-                                                </Typography>
-                                            </Box>
-                                            <Box>
-                                                <Typography variant="h6" fontWeight="bold" color="secondary.main">
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <h6 className="text-lg font-bold text-secondary-500">
                                                     {(totalRaised / 1000).toFixed(0)}K
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
+                                                </h6>
+                                                <span className="text-xs text-neutral-500 dark:text-neutral-400">
                                                     ج.م تم جمعها
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
+                                                </span>
+                                            </div>
+                                        </div>
 
-                                        <Button
-                                            component={Link}
+                                        <Link
                                             to={`/programs/${program.id}`}
-                                            variant="outlined"
-                                            fullWidth
-                                            color="inherit"
-                                            sx={{
-                                                borderColor: alpha(theme.palette.common.black, 0.1),
-                                                '&:hover': {
-                                                    borderColor: theme.palette.primary.main,
-                                                    bgcolor: alpha(theme.palette.primary.main, 0.05),
-                                                    color: theme.palette.primary.main
-                                                }
-                                            }}
+                                            className="block w-full border border-neutral-300 dark:border-neutral-600 text-neutral-800 dark:text-neutral-200 text-center px-5 py-2 rounded-md font-semibold hover:border-primary-500 hover:bg-primary-500/5 hover:text-primary-500 transition-colors"
                                         >
                                             عرض التفاصيل
-                                        </Button>
-                                    </CardContent>
-                                </ProgramCard>
-                            </Grid>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                         );
                     })}
-                </Grid>
-            </Container>
-        </Box>
+                </div>
+            </div>
+        </div>
     );
 }
-
-const DividerWithText = styled(Box)(({ theme }) => ({
-    height: 1,
-    width: '60%',
-    backgroundColor: theme.palette.divider,
-    margin: '0 auto',
-}));
 
 function getProgramDescription(id) {
     const descriptions = {

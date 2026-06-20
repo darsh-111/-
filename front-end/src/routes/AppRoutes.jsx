@@ -8,6 +8,7 @@ const Home = lazy(() => import('../pages/donor/Home'));
 const Projects = lazy(() => import('../pages/donor/Projects'));
 const ProjectDetails = lazy(() => import('../pages/donor/ProjectDetails'));
 const Donate = lazy(() => import('../pages/donor/Donate'));
+const DonateItem = lazy(() => import('../pages/donor/DonateItem'));
 const Confirmation = lazy(() => import('../pages/donor/Confirmation'));
 const Blog = lazy(() => import('../pages/donor/Blog'));
 const BlogDetail = lazy(() => import('../pages/donor/BlogDetail'));
@@ -75,6 +76,7 @@ export default function AppRoutes() {
             <Route path="/projects" element={<DonorLayout><Projects /></DonorLayout>} />
             <Route path="/projects/:id" element={<DonorLayout><ProjectDetails /></DonorLayout>} />
             <Route path="/donate" element={<DonorLayout><Donate /></DonorLayout>} />
+<Route path="/donate/:categoryId/:itemId" element={<DonorLayout><DonateItem /></DonorLayout>} />
             <Route path="/confirmation" element={<DonorLayout><Confirmation /></DonorLayout>} />
             <Route path="/programs" element={<DonorLayout><Programs /></DonorLayout>} />
             <Route path="/programs/:id" element={<DonorLayout><ProgramDetail /></DonorLayout>} />

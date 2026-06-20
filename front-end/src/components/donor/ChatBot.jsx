@@ -1,100 +1,29 @@
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, useTheme, alpha, Button, TextField, InputAdornment, CircularProgress } from '@mui/material';
-import { keyframes } from '@emotion/react';
-import styled from '@emotion/styled';
+import { useTheme } from '../../contexts/ThemeContext';
 import { faqs, greetingMessages, quickReplies } from '../../data/chatbotData';
 import { donationCategories } from '../../data/mockData';
 import { aiChat } from '../../api/ai.api';
 
+import { useInjectStyles } from '../../utils/injectStyles';
 const GREEN = '#00b16a';
 const GREEN_DK = '#009659';
 
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(16px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+const chatStyles = `
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,177,106,0.4); } 50% { box-shadow: 0 0 0 12px rgba(0,177,106,0); } }
 `;
 
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
+const fabStyles = `
+    @keyframes pulseFab { 0%,100% { box-shadow: 0 0 0 0 rgba(0,177,106,0.4); } 50% { box-shadow: 0 0 0 12px rgba(0,177,106,0); } }
 `;
-
-const FabButton = styled(IconButton)(({ dragging }) => ({
-    position: 'fixed',
-    zIndex: 1100,
-    width: 56,
-    height: 56,
-    borderRadius: '50%',
-    background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DK})`,
-    color: '#fff',
-    boxShadow: dragging
-        ? `0 8px 30px ${alpha(GREEN, 0.5)}`
-        : `0 4px 20px ${alpha(GREEN, 0.4)}`,
-    transition: dragging
-        ? 'none'
-        : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-    animation: dragging ? 'none' : `${pulse} 2.5s ease-in-out infinite`,
-    cursor: dragging ? 'grabbing' : 'grab',
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    touchAction: 'none',
-    '&:hover': {
-        transform: dragging ? 'none' : 'scale(1.1)',
-        boxShadow: `0 8px 30px ${alpha(GREEN, 0.5)}`,
-        background: `linear-gradient(135deg, ${GREEN_DK}, ${GREEN})`,
-    },
-    '& i': { fontSize: '1.4rem', pointerEvents: 'none' },
-}));
-
-const pulse = keyframes`
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0,177,106,0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(0,177,106,0); }
-`;
-
-const ChatWindow = styled(Box)(({ theme }) => {
-    const isDark = theme.palette.mode === 'dark';
-    return {
-        borderRadius: '20px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: isDark ? '#0f1a1c' : '#ffffff',
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.12)}`,
-        boxShadow: isDark
-            ? '0 16px 60px rgba(0,0,0,0.5)'
-            : '0 16px 60px rgba(0,177,106,0.15)',
-        animation: `${slideUp} 0.35s ease both`,
-    };
-});
-
-const MessageBubble = styled(Box, { shouldForwardProp: (prop) => prop !== 'isUser' })(({ isUser, theme }) => {
-    const isDark = theme.palette.mode === 'dark';
-    return {
-        maxWidth: '88%',
-        padding: '10px 14px',
-        borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-        backgroundColor: isUser ? GREEN : (isDark ? '#1e2d2b' : '#f0faf5'),
-        color: isUser ? '#fff' : (isDark ? '#e2e8f0' : '#2d3436'),
-        alignSelf: isUser ? 'flex-end' : 'flex-start',
-        animation: `${slideUp} 0.3s ease both`,
-        fontSize: '0.82rem',
-        lineHeight: 1.6,
-        fontFamily: "'Cairo', 'Tajawal', sans-serif",
-        wordBreak: 'break-word',
-        whiteSpace: 'pre-wrap',
-        boxShadow: isUser
-            ? `0 2px 8px ${alpha(GREEN, 0.2)}`
-            : '0 1px 4px rgba(0,0,0,0.04)',
-    };
-});
 
 const MAXIMIZE_THRESHOLD = 520;
 
 function ChatBot() {
-    const theme = useTheme();
+    const { isDark } = useTheme();
     const navigate = useNavigate();
-    const isDark = theme.palette.mode === 'dark';
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [selectedCat, setSelectedCat] = useState(null);
@@ -104,6 +33,8 @@ function ChatBot() {
     const [dragging, setDragging] = useState(false);
     const [winSize, setWinSize] = useState({ w: 440, h: 560 });
     const [resizing, setResizing] = useState(false);
+    useInjectStyles(chatStyles, 'chat-styles');
+    useInjectStyles(fabStyles, 'fab-styles');
     const dragRef = useRef({ startX: 0, startY: 0, startFabX: 0, startFabY: 0 });
     const fabRef = useRef(null);
     const chatRef = useRef(null);
@@ -137,7 +68,6 @@ function ChatBot() {
         if (open) setTimeout(() => inputRef.current?.focus(), 400);
     }, [open]);
 
-    /* ---- drag FAB ---- */
     const handleDragStart = useCallback((e) => {
         const pos = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
         dragRef.current = { startX: pos.x, startY: pos.y, startFabX: fabPos.x, startFabY: fabPos.y };
@@ -196,7 +126,6 @@ function ChatBot() {
         };
     }, [dragging, handleDragMove, handleDragEnd]);
 
-    /* ---- resize window ---- */
     const handleResizeStart = useCallback((e) => {
         e.stopPropagation();
         const pos = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
@@ -241,7 +170,6 @@ function ChatBot() {
         };
     }, [resizing, handleResizeMove, handleResizeEnd]);
 
-    /* ---- open full page ---- */
     const handleOpenFullPage = () => {
         setOpen(false);
         navigate('/chat');
@@ -297,307 +225,253 @@ function ChatBot() {
     const content = (
         <>
             {/* Header */}
-            <Box
+            <div
                 onMouseDown={handleDragStart}
                 onTouchStart={handleDragStart}
-                sx={{
-                    p: { xs: 2, md: 2 },
+                className="p-2 flex items-center gap-1.5 shrink-0 cursor-grab select-none text-white"
+                style={{
                     background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DK})`,
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    flexShrink: 0,
-                    cursor: 'grab',
-                    userSelect: 'none',
                 }}>
-                <Box sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
+                <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                     <i className="fa-solid fa-robot" style={{ fontSize: '1rem' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                    <Typography sx={{
-                        fontWeight: 800,
-                        fontSize: '0.92rem',
-                        fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                        lineHeight: 1.2,
-                    }}>
+                </div>
+                <div className="flex-1">
+                    <p className="font-extrabold text-[0.92rem] leading-tight" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
                         مساعد نور الذكي
-                    </Typography>
-                    <Typography sx={{
-                        fontSize: '0.7rem',
-                        opacity: 0.85,
-                        fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                    }}>
+                    </p>
+                    <p className="text-[0.7rem] opacity-85" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
                         مدعوم بالذكاء الاصطناعي
-                    </Typography>
-                </Box>
-                <IconButton
-                    size="small"
+                    </p>
+                </div>
+                <button
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     onClick={handleOpenFullPage}
-                    sx={{ color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}
+                    className="p-2 rounded-md transition-colors text-white hover:bg-white/15"
                 >
                     <i className="fa-solid fa-expand" />
-                </IconButton>
-                <IconButton
-                    size="small"
+                </button>
+                <button
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     onClick={() => setOpen(false)}
-                    sx={{ color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}
+                    className="p-2 rounded-md transition-colors text-white hover:bg-white/15"
                 >
                     <i className="fa-solid fa-xmark" />
-                </IconButton>
-            </Box>
+                </button>
+            </div>
 
             {/* Messages */}
-            <Box sx={{
-                flex: 1,
-                overflow: 'auto',
-                p: { xs: 2, md: 2 },
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5,
+            <div className="flex-1 overflow-auto p-2 flex flex-col gap-1.5" style={{
                 direction: 'rtl',
-                '&::-webkit-scrollbar': { width: 4 },
-                '&::-webkit-scrollbar-thumb': { bgcolor: alpha(GREEN, 0.2), borderRadius: 4 },
             }}>
                 {messages.map((msg, idx) => (
-                    <Box key={idx}>
-                        <MessageBubble isUser={msg.type === 'user'}>
-                            {msg.text}
-                        </MessageBubble>
-                        {msg.isQuickReplies && (
-                            <Box sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.6,
-                                mt: 1.5,
-                                animation: `${slideUp} 0.4s ease both`,
+                    <div key={idx}>
+                        <div className="max-w-[88%] p-[10px_14px] text-[0.82rem] leading-relaxed break-words whitespace-pre-wrap"
+                            style={{
+                                borderRadius: msg.type === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                                backgroundColor: msg.type === 'user' ? GREEN : (isDark ? '#1e2d2b' : '#f0faf5'),
+                                color: msg.type === 'user' ? '#fff' : (isDark ? '#e2e8f0' : '#2d3436'),
+                                alignSelf: msg.type === 'user' ? 'flex-end' : 'flex-start',
+                                animation: 'slideUp 0.3s ease both',
+                                fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                                boxShadow: msg.type === 'user' ? '0 2px 8px rgba(0,177,106,0.2)' : '0 1px 4px rgba(0,0,0,0.04)',
                             }}>
+                            {msg.text}
+                        </div>
+                        {msg.isQuickReplies && (
+                            <div className="flex flex-wrap gap-0.6 mt-1.5" style={{ animation: 'slideUp 0.4s ease both' }}>
                                 {quickReplies.map(qr => (
-                                    <Button
-                                        key={qr.faqId}
-                                        size="small"
+                                    <button key={qr.faqId}
                                         onClick={() => handleQuickReply(qr.faqId)}
-                                        sx={{
-                                            borderRadius: '999px',
+                                        className="inline-flex items-center gap-0.5 px-1.2 py-0.4 rounded-full text-[0.72rem] font-semibold border transition-all"
+                                        style={{
                                             fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                                            fontSize: '0.72rem',
-                                            textTransform: 'none',
-                                            fontWeight: 600,
-                                            py: 0.4,
-                                            px: 1.2,
-                                            minWidth: 0,
-                                            bgcolor: isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.06),
+                                            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,177,106,0.06)',
                                             color: isDark ? '#94a3b8' : '#5a6a6a',
-                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.1)}`,
-                                            '&:hover': { bgcolor: alpha(GREEN, 0.1), borderColor: alpha(GREEN, 0.3) },
-                                            '& i': { fontSize: '0.7rem', ml: 0.4 },
+                                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,177,106,0.1)',
                                         }}
-                                        startIcon={<i className={qr.icon} />}
+                                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(0,177,106,0.1)'; e.currentTarget.style.borderColor = 'rgba(0,177,106,0.3)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,177,106,0.06)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,177,106,0.1)'; }}
                                     >
+                                        <i className={qr.icon} style={{ fontSize: '0.7rem' }} />
                                         {qr.label}
-                                    </Button>
+                                    </button>
                                 ))}
-                            </Box>
+                            </div>
                         )}
-                    </Box>
+                    </div>
                 ))}
 
                 {loading && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, animation: `${slideUp} 0.3s ease both`, mr: 1 }}>
-                        <CircularProgress size={18} sx={{ color: GREEN }} />
-                        <Typography sx={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#889a98', fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
+                    <div className="flex items-center gap-1 mr-1" style={{ animation: 'slideUp 0.3s ease both' }}>
+                        <div className="animate-spin rounded-full h-[18px] w-[18px] border-2 border-[#00b16a] border-t-transparent"></div>
+                        <span className="text-[0.75rem]" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", color: isDark ? '#94a3b8' : '#889a98' }}>
                             جار الرد...
-                        </Typography>
-                    </Box>
+                        </span>
+                    </div>
                 )}
 
                 {messages.length > 0 && !loading && (
-                    <Box sx={{
-                        display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, pt: 1.5,
-                        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.08)}`,
+                    <div className="flex flex-wrap gap-0.5 mt-1 pt-1.5" style={{
+                        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,177,106,0.08)'}`,
                     }}>
                         {categories.map(cat => (
-                            <Button
-                                key={cat} size="small"
+                            <button key={cat}
                                 onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
-                                sx={{
-                                    borderRadius: '999px', fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                                    fontSize: '0.65rem', textTransform: 'none',
-                                    fontWeight: selectedCat === cat ? 700 : 500,
-                                    py: 0.3, px: 1, minWidth: 0,
-                                    bgcolor: selectedCat === cat ? GREEN : 'transparent',
+                                className="px-1 py-0.3 rounded-full text-[0.65rem] font-semibold border transition-all"
+                                style={{
+                                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                                    backgroundColor: selectedCat === cat ? GREEN : 'transparent',
                                     color: selectedCat === cat ? '#fff' : (isDark ? '#94a3b8' : '#5a6a6a'),
-                                    border: `1px solid ${selectedCat === cat ? GREEN : (isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.1))}`,
-                                    '&:hover': { bgcolor: selectedCat === cat ? GREEN_DK : alpha(GREEN, 0.06) },
+                                    borderColor: selectedCat === cat ? GREEN : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,177,106,0.1)'),
                                 }}
+                                onMouseEnter={e => { if (selectedCat !== cat) { e.currentTarget.style.backgroundColor = 'rgba(0,177,106,0.06)'; } }}
+                                onMouseLeave={e => { if (selectedCat !== cat) { e.currentTarget.style.backgroundColor = 'transparent'; } }}
                             >
                                 {cat}
-                            </Button>
+                            </button>
                         ))}
-                    </Box>
+                    </div>
                 )}
 
                 {selectedCat && getFilteredFaqs().map(faq => (
-                    <Box key={faq.id} onClick={() => handleFaqClick(faq.id)} sx={{
-                        p: 1.2, borderRadius: '12px',
-                        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : alpha(GREEN, 0.03),
-                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : alpha(GREEN, 0.06)}`,
-                        cursor: 'pointer', transition: 'all 0.2s ease',
-                        animation: `${slideUp} 0.3s ease both`,
-                        '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.06), borderColor: alpha(GREEN, 0.2) },
-                    }}>
-                        <Typography sx={{
-                            fontSize: '0.78rem', fontWeight: 600,
+                    <div key={faq.id} onClick={() => handleFaqClick(faq.id)}
+                        className="p-1.2 rounded-xl cursor-pointer transition-all"
+                        style={{
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,177,106,0.03)',
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,177,106,0.06)'}`,
+                            animation: 'slideUp 0.3s ease both',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,177,106,0.06)'; e.currentTarget.style.borderColor = 'rgba(0,177,106,0.2)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,177,106,0.03)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,177,106,0.06)'; }}
+                    >
+                        <p className="text-[0.78rem] font-semibold" style={{
                             fontFamily: "'Cairo', 'Tajawal', sans-serif",
                             color: isDark ? '#e2e8f0' : '#2d3436',
                         }}>
-                            <i className="fa-regular fa-circle-question" style={{ fontSize: '0.7rem', ml: 0.6, color: GREEN }} />
+                            <i className="fa-regular fa-circle-question" style={{ fontSize: '0.7rem', marginInlineEnd: 0.6, color: GREEN }} />
                             {' '}{faq.question}
-                        </Typography>
-                    </Box>
+                        </p>
+                    </div>
                 ))}
 
                 <div ref={messagesEndRef} />
-            </Box>
+            </div>
 
             {/* Input */}
-            <Box sx={{
-                p: { xs: 1.5, md: 1.5 },
-                borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.08)}`,
+            <div className="p-1.5" style={{
+                borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,177,106,0.08)'}`,
             }}>
-                <TextField
-                    inputRef={inputRef}
-                    fullWidth
-                    size="small"
-                    placeholder={loading ? '...' : 'اكتب سؤالك هنا...'}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={loading}
-                    dir="rtl"
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: '12px',
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : alpha(GREEN, 0.03),
-                            fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                            fontSize: '0.82rem',
-                            '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.12) },
-                            '&:hover fieldset': { borderColor: alpha(GREEN, 0.3) },
-                            '&.Mui-focused fieldset': { borderColor: GREEN },
-                        },
-                    }}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    size="small"
-                                    onClick={handleSend}
-                                    disabled={loading || !input.trim()}
-                                    sx={{
-                                        bgcolor: input.trim() && !loading ? GREEN : 'transparent',
-                                        color: input.trim() && !loading ? '#fff' : (isDark ? '#64748b' : '#a0b4b2'),
-                                        borderRadius: '8px', width: 32, height: 32, transition: 'all 0.2s ease',
-                                        '&:hover': { bgcolor: input.trim() && !loading ? GREEN_DK : alpha(GREEN, 0.1) },
-                                    }}
-                                >
-                                    <i className="fa-solid fa-paper-plane" style={{ fontSize: '0.78rem' }} />
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            </Box>
+                <div className="flex items-center gap-1 rounded-xl px-3 py-1" style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,177,106,0.03)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,177,106,0.12)'}`,
+                }}>
+                    <input
+                        ref={inputRef}
+                        placeholder={loading ? '...' : 'اكتب سؤالك هنا...'}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={loading}
+                        dir="rtl"
+                        className="flex-1 bg-transparent border-none outline-none text-[0.82rem]"
+                        style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", color: isDark ? '#e2e8f0' : '#333' }}
+                    />
+                    <button
+                        onClick={handleSend}
+                        disabled={loading || !input.trim()}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-all shrink-0"
+                        style={{
+                            backgroundColor: input.trim() && !loading ? GREEN : 'transparent',
+                            color: input.trim() && !loading ? '#fff' : (isDark ? '#64748b' : '#a0b4b2'),
+                        }}
+                        onMouseEnter={e => { if (input.trim() && !loading) { e.currentTarget.style.backgroundColor = GREEN_DK; } }}
+                        onMouseLeave={e => { if (input.trim() && !loading) { e.currentTarget.style.backgroundColor = GREEN; } }}
+                    >
+                        <i className="fa-solid fa-paper-plane" style={{ fontSize: '0.78rem' }} />
+                    </button>
+                </div>
+            </div>
         </>
     );
 
     return (
         <>
             {open && (
-                <ChatWindow
+                <div
                     ref={chatRef}
-                    sx={{
-                        position: 'fixed',
+                    className="fixed z-[1100] flex flex-col"
+                    style={{
                         width: Math.max(300, Math.min(winSize.w, window.innerWidth - 48)),
                         height: Math.max(350, Math.min(winSize.h, window.innerHeight - 120)),
-                        zIndex: 1100,
+                        borderRadius: '20px',
+                        overflow: 'hidden',
+                        backgroundColor: isDark ? '#0f1a1c' : '#ffffff',
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,177,106,0.12)'}`,
+                        boxShadow: isDark ? '0 16px 60px rgba(0,0,0,0.5)' : '0 16px 60px rgba(0,177,106,0.15)',
+                        animation: 'slideUp 0.35s ease both',
                     }}
                 >
                     {content}
                     {/* Resize handles */}
-                    <>
-                        {/* Top-left: resize up/left */}
-                        <Box
-                            onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(e); }}
-                            onTouchStart={(e) => { e.stopPropagation(); handleResizeStart(e); }}
-                            sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: 28,
-                                height: 28,
-                                cursor: 'nwse-resize',
-                                zIndex: 10,
-                                borderTop: `3px solid ${alpha(GREEN, 0.35)}`,
-                                borderLeft: `3px solid ${alpha(GREEN, 0.35)}`,
-                                borderTopLeftRadius: '18px',
-                                transition: 'border-color 0.2s',
-                                '&:hover': { borderTopColor: GREEN, borderLeftColor: GREEN },
-                            }}
-                        />
-                        {/* Right edge: resize width */}
-                        <Box
-                            onMouseDown={(e) => {
-                                e.stopPropagation();
-                                const pos = { x: e.clientX, y: e.clientY };
-                                resizeRef.current = { startX: pos.x, startY: pos.y, startW: winSize.w, startH: winSize.h, mode: 'width' };
-                                setResizing(true);
-                            }}
-                            onTouchStart={(e) => {
-                                e.stopPropagation();
-                                const pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                                resizeRef.current = { startX: pos.x, startY: pos.y, startW: winSize.w, startH: winSize.h, mode: 'width' };
-                                setResizing(true);
-                            }}
-                            sx={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: 8,
-                                height: '100%',
-                                cursor: 'ew-resize',
-                                zIndex: 10,
-                                opacity: 0.4,
-                                transition: 'opacity 0.2s',
-                                '&:hover': { opacity: 0.8, bgcolor: alpha(GREEN, 0.05) },
-                            }}
-                        />
-                    </>
-                </ChatWindow>
+                    <div
+                        onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(e); }}
+                        onTouchStart={(e) => { e.stopPropagation(); handleResizeStart(e); }}
+                        className="absolute top-0 left-0 w-7 h-7 z-10 transition-colors"
+                        style={{
+                            cursor: 'nwse-resize',
+                            borderTop: `3px solid rgba(0,177,106,0.35)`,
+                            borderLeft: `3px solid rgba(0,177,106,0.35)`,
+                            borderTopLeftRadius: '18px',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderTopColor = GREEN; e.currentTarget.style.borderLeftColor = GREEN; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderTopColor = 'rgba(0,177,106,0.35)'; e.currentTarget.style.borderLeftColor = 'rgba(0,177,106,0.35)'; }}
+                    />
+                    <div
+                        onMouseDown={(e) => {
+                            e.stopPropagation();
+                            const pos = { x: e.clientX, y: e.clientY };
+                            resizeRef.current = { startX: pos.x, startY: pos.y, startW: winSize.w, startH: winSize.h, mode: 'width' };
+                            setResizing(true);
+                        }}
+                        onTouchStart={(e) => {
+                            e.stopPropagation();
+                            const pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                            resizeRef.current = { startX: pos.x, startY: pos.y, startW: winSize.w, startH: winSize.h, mode: 'width' };
+                            setResizing(true);
+                        }}
+                        className="absolute top-0 right-0 w-2 h-full z-10 opacity-40 transition-opacity"
+                        style={{ cursor: 'ew-resize' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.backgroundColor = 'rgba(0,177,106,0.05)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    />
+                </div>
             )}
 
             {!open && (
-                <FabButton
+                <button
                     ref={fabRef}
-                    dragging={dragging ? 1 : 0}
-                    style={{ position: 'fixed', zIndex: 1100, left: fabPos.x + 'px', bottom: fabPos.y + 'px', transform: dragging ? 'scale(1.08)' : 'none', touchAction: 'none' }}
+                    className="fixed z-[1100] w-14 h-14 rounded-full text-white flex items-center justify-center"
+                    style={{
+                        background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DK})`,
+                        boxShadow: dragging ? `0 8px 30px rgba(0,177,106,0.5)` : `0 4px 20px rgba(0,177,106,0.4)`,
+                        left: fabPos.x + 'px',
+                        bottom: fabPos.y + 'px',
+                        transition: dragging ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        cursor: dragging ? 'grabbing' : 'grab',
+                        userSelect: 'none',
+                        transform: dragging ? 'scale(1.08)' : 'none',
+                        touchAction: 'none',
+                    }}
                     onMouseDown={handleDragStart}
                     onTouchStart={handleDragStart}
                     onClick={() => setOpen(true)}
+                    onMouseEnter={e => { if (!dragging) { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = `0 8px 30px rgba(0,177,106,0.5)`; }}}
+                    onMouseLeave={e => { if (!dragging) { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 4px 20px rgba(0,177,106,0.4)`; }}}
                 >
-                    <i className="fa-solid fa-comment-dots" />
-                </FabButton>
+                    <i className="fa-solid fa-comment-dots" style={{ fontSize: '1.4rem', pointerEvents: 'none' }} />
+                </button>
             )}
         </>
     );

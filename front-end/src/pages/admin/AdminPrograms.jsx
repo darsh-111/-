@@ -1,15 +1,9 @@
-import { useState, useCallback } from 'react';
-import { TextField, Box, Typography, useTheme, alpha, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { useState, useCallback, useEffect } from 'react';
 import { AdminPageHeader, AdminDataTable, AdminFormDialog, AdminStatusChip } from '../../components/admin';
 import { t, formatCurrency } from '../../i18n';
 import { useAdminData, adminActions } from '../../contexts/AdminDataContext';
 
-
-/**
- * Admin Programs Page — Full CRUD, affects home page programs section
- */
 function AdminPrograms() {
-    const theme = useTheme();
     const { state, dispatch } = useAdminData();
     const programsList = state.programs;
 
@@ -18,6 +12,13 @@ function AdminPrograms() {
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', severity: 'success' });
     const [formData, setFormData] = useState({ name: '', nameEn: '', icon: '', color: '#0B6B6B', description: '' });
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, program: null });
+
+    useEffect(() => {
+        if (snackbar.open) {
+            const timer = setTimeout(() => setSnackbar(s => ({ ...s, open: false })), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [snackbar.open]);
 
     const resetForm = () => setFormData({ name: '', nameEn: '', icon: '', color: '#0B6B6B', description: '' });
 
@@ -46,7 +47,7 @@ function AdminPrograms() {
     const confirmDelete = () => {
         const { program } = deleteConfirm;
         if (!program) return;
-        
+
         dispatch(adminActions.deleteProgram(program.id));
         setSnackbar({ open: true, msg: `تم حذف البرنامج "${program.name}" بنجاح`, severity: 'success' });
         setDeleteConfirm({ open: false, program: null });
@@ -100,19 +101,15 @@ function AdminPrograms() {
         {
             key: 'name', label: t('admin.programsPage.program'),
             render: (_, row) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{
-                        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: 1, bgcolor: alpha(row.color || theme.palette.primary.main, 0.1),
-                        color: row.color || 'primary.main', fontSize: '1.25rem'
-                    }}>
+                <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded text-xl" style={{ backgroundColor: `color-mix(in srgb, ${row.color || 'var(--color-primary-500)'} 10%, transparent)`, color: row.color || 'var(--color-primary-500)' }}>
                         <i className={row.icon} />
-                    </Box>
-                    <Box>
-                        <Box sx={{ fontWeight: 'medium' }}>{row.name}</Box>
-                        {row.nameEn && <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>{row.nameEn}</Box>}
-                    </Box>
-                </Box>
+                    </div>
+                    <div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">{row.name}</div>
+                        {row.nameEn && <div className="text-xs text-neutral-500 dark:text-neutral-400">{row.nameEn}</div>}
+                    </div>
+                </div>
             ),
         },
         { key: 'projectCount', label: t('admin.programsPage.projectCount'), align: 'center', render: (val) => val || 0 },
@@ -130,7 +127,7 @@ function AdminPrograms() {
     ];
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-3">
             <AdminPageHeader
                 title={t('admin.programsPage.title')}
                 subtitle={t('admin.programsPage.subtitle')}
@@ -146,54 +143,100 @@ function AdminPrograms() {
                 title={selectedProgram ? t('admin.programsPage.editProgram') : t('admin.programsPage.addNew')}
                 submitLabel={selectedProgram ? t('admin.programsPage.saveChanges') : t('admin.programsPage.add')}
             >
-                <TextField
-                    autoFocus label={t('admin.programsPage.nameLabel')} fullWidth required
-                    value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                <input
+                    autoFocus
+                    placeholder={t('admin.programsPage.nameLabel')}
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
                 />
-                <TextField
-                    label="اسم البرنامج (إنجليزي)" fullWidth
-                    value={formData.nameEn} onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                <input
+                    placeholder="اسم البرنامج (إنجليزي)"
+                    value={formData.nameEn}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
                 />
-                <TextField
-                    label={t('admin.programsPage.iconLabel')} fullWidth
-                    value={formData.icon} onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                    placeholder={t('admin.programsPage.iconPlaceholder')}
-                    helperText={formData.icon && <Box sx={{ mt: 1 }}><i className={formData.icon} style={{ fontSize: 24 }} /> معاينة الأيقونة</Box>}
-                />
-                <TextField
-                    label={t('admin.programsPage.colorLabel')} type="color" fullWidth
-                    value={formData.color} onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                    label={t('admin.programsPage.descLabel')} multiline rows={4} fullWidth
-                    value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder={t('admin.programsPage.descPlaceholder')}
+                <div>
+                    <input
+                        placeholder={t('admin.programsPage.iconLabel')}
+                        value={formData.icon}
+                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                        className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                    {formData.icon && (
+                        <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                            <i className={formData.icon} style={{ fontSize: 24 }} />
+                            <span>معاينة الأيقونة</span>
+                        </div>
+                    )}
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.programsPage.colorLabel')}</label>
+                    <input
+                        type="color"
+                        value={formData.color}
+                        onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                        className="w-full h-10 px-1 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent cursor-pointer"
+                    />
+                </div>
+                <textarea
+                    placeholder={t('admin.programsPage.descLabel')}
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none resize-none"
                 />
             </AdminFormDialog>
 
-            <Dialog open={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, program: null })}>
-                <DialogTitle>تأكيد الحذف</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        هل أنت متأكد من حذف برنامج "{deleteConfirm.program?.name}"؟
-                        {deleteConfirm.program?.projectCount > 0 && (
-                            <Typography color="error" sx={{ mt: 2, fontWeight: 'bold' }}>
-                                تحذير: هذا البرنامج يحتوي على {deleteConfirm.program.projectCount} مشاريع مرتبطة به! 
-                            </Typography>
-                        )}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDeleteConfirm({ open: false, program: null })} color="inherit">إلغاء</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained">حذف نهائياً</Button>
-                </DialogActions>
-            </Dialog>
+            {deleteConfirm.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirm({ open: false, program: null })} />
+                    <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
+                        <h2 className="text-lg font-bold p-4 border-b border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100">تأكيد الحذف</h2>
+                        <div className="p-4">
+                            <p className="text-neutral-700 dark:text-neutral-300">
+                                هل أنت متأكد من حذف برنامج "{deleteConfirm.program?.name}"؟
+                            </p>
+                            {deleteConfirm.program?.projectCount > 0 && (
+                                <p className="mt-2 font-bold text-error-500">
+                                    تحذير: هذا البرنامج يحتوي على {deleteConfirm.program.projectCount} مشاريع مرتبطة به!
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2 p-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <button
+                                onClick={() => setDeleteConfirm({ open: false, program: null })}
+                                className="px-5 py-2 rounded-md font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-5 py-2 rounded-md font-semibold bg-error-500 text-white hover:bg-error-600 transition-colors"
+                            >
+                                حذف نهائياً
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert severity={snackbar.severity} variant="filled">{snackbar.msg}</Alert>
-            </Snackbar>
-        </Box>
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <div className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 ${
+                        snackbar.severity === 'success' ? 'bg-success-500 text-white' :
+                        snackbar.severity === 'error' ? 'bg-error-500 text-white' :
+                        'bg-primary-500 text-white'
+                    }`}>
+                        <span>{snackbar.msg}</span>
+                        <button className="text-white/80 hover:text-white mr-2" onClick={() => setSnackbar(s => ({ ...s, open: false }))}>
+                            <i className="fa-solid fa-xmark" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

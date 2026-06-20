@@ -1,47 +1,12 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    CardMedia,
-    Button,
-    Stack,
-    LinearProgress,
-    useTheme,
-    alpha
-} from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { formatCurrency, formatNumber } from '../../i18n';
 import { useAdminData } from '../../contexts/AdminDataContext';
-import styled from '@emotion/styled';
-
-const HeroSection = styled(Box)(({ theme }) => ({
-    background: `linear-gradient(135deg, ${theme.palette.hero.base} 0%, ${theme.palette.hero.dark} 100%)`,
-    color: theme.palette.common.white,
-    padding: theme.spacing(10, 0, 6),
-    textAlign: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-}));
-
-const ProjectCard = styled(Card)(({ theme }) => ({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    borderRadius: theme.shape.borderRadius * 2,
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    '&:hover': {
-        transform: 'translateY(-6px)',
-        boxShadow: theme.shadows[8],
-    },
-}));
 
 function ProgramDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const theme = useTheme();
+    const { isDark } = useTheme();
     const { state } = useAdminData();
 
     const programs = state.programs;
@@ -53,116 +18,102 @@ function ProgramDetail() {
 
     if (!program) {
         return (
-            <Box sx={{ textAlign: 'center', py: 12, minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <Box sx={{ width: 80, height: 80, borderRadius: '50%', mx: 'auto', mb: 3, bgcolor: alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-search" style={{ fontSize: '2rem', color: theme.palette.primary.main }} />
-                </Box>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>البرنامج غير موجود</Typography>
-                <Button component={Link} to="/programs" variant="contained" sx={{ borderRadius: '14px', px: 4, textTransform: 'none' }}>
+            <div className="text-center py-12 min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-20 h-20 rounded-full mx-auto mb-3 bg-primary-500/10 flex items-center justify-center">
+                    <i className="fa-solid fa-search text-3xl text-primary-500" />
+                </div>
+                <h5 className="text-lg font-bold mb-1">البرنامج غير موجود</h5>
+                <Link to="/programs" className="bg-primary-500 text-white px-5 py-2.5 rounded-[14px] font-semibold hover:bg-primary-600 transition-colors">
                     العودة للبرامج
-                </Button>
-            </Box>
+                </Link>
+            </div>
         );
     }
 
     return (
-        <Box sx={{ pb: 12 }}>
-            {/* Hero */}
-            <HeroSection>
-                <Container>
-                    <Box sx={{
-                        width: 80, height: 80, borderRadius: '50%', mx: 'auto', mb: 2,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 36, bgcolor: alpha('#fff', 0.15),
-                    }}>
+        <div className="pb-12">
+            <div style={{ background: 'linear-gradient(135deg, #1a4a44 0%, #0a1f1c 100%)' }} className="text-white py-16 text-center relative overflow-hidden">
+                <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+                    <div className="w-20 h-20 rounded-full mx-auto mb-2 flex items-center justify-center text-4xl" style={{ background: 'rgba(255,255,255,0.15)' }}>
                         <i className={program.icon}></i>
-                    </Box>
-                    <Typography variant="h3" fontWeight="bold" gutterBottom>
-                        {program.name}
-                    </Typography>
-                    <Typography variant="h6" sx={{ opacity: 0.9, maxWidth: 700, mx: 'auto', mb: 3 }}>
+                    </div>
+                    <h1 className="text-3xl font-bold mb-2">{program.name}</h1>
+                    <p className="text-lg opacity-90 max-w-[700px] mx-auto mb-3">
                         {program.description || `برنامج ${program.name} يهدف لتحقيق أثر إيجابي في المجتمع`}
-                    </Typography>
+                    </p>
 
-                    {/* Stats */}
-                    <Stack direction="row" spacing={4} justifyContent="center" sx={{ mt: 2 }}>
-                        <Box>
-                            <Typography variant="h4" fontWeight="bold">{programProjects.length}</Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.8 }}>مشروع نشط</Typography>
-                        </Box>
-                        <Box>
-                            <Typography variant="h4" fontWeight="bold">{formatCurrency(totalRaised)}</Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.8 }}>تم جمعها</Typography>
-                        </Box>
-                    </Stack>
-                </Container>
-            </HeroSection>
+                    <div className="flex justify-center gap-4 mt-2">
+                        <div>
+                            <h4 className="text-2xl font-bold">{programProjects.length}</h4>
+                            <p className="text-sm opacity-80">مشروع نشط</p>
+                        </div>
+                        <div>
+                            <h4 className="text-2xl font-bold">{formatCurrency(totalRaised)}</h4>
+                            <p className="text-sm opacity-80">تم جمعها</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            {/* Projects Grid */}
-            <Container sx={{ mt: 6 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                    <Typography variant="h5" fontWeight="bold">المشاريع النشطة</Typography>
-                    <Button onClick={() => navigate('/programs')} sx={{ textTransform: 'none' }}>
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6 mt-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h5 className="text-lg font-bold">المشاريع النشطة</h5>
+                    <button onClick={() => navigate('/programs')} className="text-sm font-medium hover:text-primary-500 transition-colors">
                         ← العودة للبرامج
-                    </Button>
-                </Box>
+                    </button>
+                </div>
 
                 {programProjects.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
-                        <i className="fa-regular fa-folder-open" style={{ fontSize: 48, opacity: 0.3 }} />
-                        <Typography sx={{ mt: 2 }}>لا توجد مشاريع نشطة في هذا البرنامج حالياً</Typography>
-                    </Box>
+                    <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+                        <i className="fa-regular fa-folder-open text-5xl opacity-30"></i>
+                        <p className="mt-2">لا توجد مشاريع نشطة في هذا البرنامج حالياً</p>
+                    </div>
                 ) : (
-                    <Grid container spacing={3}>
+                    <div className="grid grid-cols-12 gap-3">
                         {programProjects.map((project) => {
                             const pct = project.goal > 0 ? Math.min(100, Math.round((project.raised / project.goal) * 100)) : 0;
                             return (
-                                <Grid item xs={12} sm={6} md={4} key={project.id} sx={{ display: 'flex' }}>
-                                    <ProjectCard elevation={2}>
-                                        <CardMedia
-                                            component="img"
-                                            height="180"
-                                            image={project.imageUrl || project.image || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'}
+                                <div className="col-span-12 sm:col-span-6 md:col-span-4 flex" key={project.id}>
+                                    <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-card border border-neutral-100 dark:border-neutral-700 h-full flex flex-col transition-transform duration-300 ease hover:-translate-y-1.5 hover:shadow-lg overflow-hidden">
+                                        <img
+                                            className="w-full h-44 object-cover"
+                                            src={project.imageUrl || project.image || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'}
                                             alt={project.title}
-                                            sx={{ objectFit: 'cover' }}
                                             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=350&fit=crop'; }}
                                         />
-                                        <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                                {project.title}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ flex: 1, mb: 2 }}>
+                                        <div className="p-4 flex-1 flex flex-col">
+                                            <h6 className="font-bold mb-1">{project.title}</h6>
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400 flex-1 mb-2">
                                                 {project.description || 'مشروع تابع للبرنامج'}
-                                            </Typography>
-                                            <Box sx={{ mb: 1 }}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                    <Typography variant="caption" fontWeight="bold" color="primary.main">
+                                            </p>
+                                            <div className="mb-1">
+                                                <div className="flex justify-between mb-0.5">
+                                                    <span className="text-xs font-bold text-primary-500">
                                                         {formatCurrency(project.raised || 0)}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary">
+                                                    </span>
+                                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
                                                         {pct}%
-                                                    </Typography>
-                                                </Box>
-                                                <LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} />
-                                            </Box>
-                                            <Button
-                                                component={Link}
+                                                    </span>
+                                                </div>
+                                                <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                                                    <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${pct}%` }}></div>
+                                                </div>
+                                            </div>
+                                            <Link
                                                 to={`/projects/${project.id}`}
-                                                variant="outlined"
-                                                fullWidth
-                                                sx={{ textTransform: 'none', borderRadius: 2, mt: 'auto' }}
+                                                className="block w-full border border-primary-500 text-primary-500 text-center px-5 py-2 rounded-lg font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors mt-auto"
                                             >
                                                 عرض المشروع
-                                            </Button>
-                                        </CardContent>
-                                    </ProjectCard>
-                                </Grid>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
                             );
                         })}
-                    </Grid>
+                    </div>
                 )}
-            </Container>
-        </Box>
+            </div>
+        </div>
     );
 }
 

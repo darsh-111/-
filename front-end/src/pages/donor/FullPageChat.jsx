@@ -1,48 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    Box,
-    Typography,
-    IconButton,
-    TextField,
-    InputAdornment,
-    CircularProgress,
-    Button,
-    useTheme,
-    alpha,
-} from '@mui/material';
-import { keyframes } from '@emotion/react';
-import styled from '@emotion/styled';
+import { useTheme } from '../../contexts/ThemeContext';
 import { faqs, greetingMessages, quickReplies } from '../../data/chatbotData';
 import { donationCategories } from '../../data/mockData';
 import { aiChat } from '../../api/ai.api';
+import { useInjectStyles } from '../../utils/injectStyles';
 
 const GREEN = '#00b16a';
 const GREEN_DK = '#009659';
-
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(16px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-`;
-
-const MessageBubble = styled(Box)(({ isUser, theme }) => {
-    const isDark = theme.palette.mode === 'dark';
-    return {
-        maxWidth: '75%',
-        padding: '12px 18px',
-        borderRadius: isUser ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-        backgroundColor: isUser ? GREEN : (isDark ? '#1e2d2b' : '#f0faf5'),
-        color: isUser ? '#fff' : (isDark ? '#e2e8f0' : '#2d3436'),
-        alignSelf: isUser ? 'flex-end' : 'flex-start',
-        animation: `${slideUp} 0.3s ease both`,
-        fontSize: '0.95rem',
-        lineHeight: 1.7,
-        fontFamily: "'Cairo', 'Tajawal', sans-serif",
-        wordBreak: 'break-word',
-        whiteSpace: 'pre-wrap',
-        boxShadow: isUser ? `0 2px 8px ${alpha(GREEN, 0.2)}` : '0 1px 4px rgba(0,0,0,0.04)',
-    };
-});
 
 const projectsData = donationCategories.flatMap(cat =>
     cat.items.map(item => ({
@@ -53,10 +18,16 @@ const projectsData = donationCategories.flatMap(cat =>
     }))
 );
 
+const fullPageChatStyles = `
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(16px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+`;
+
 function FullPageChat() {
-    const theme = useTheme();
+    const { isDark } = useTheme();
     const navigate = useNavigate();
-    const isDark = theme.palette.mode === 'dark';
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -79,6 +50,7 @@ function FullPageChat() {
     useEffect(() => {
         setTimeout(() => inputRef.current?.focus(), 300);
     }, []);
+    useInjectStyles(fullPageChatStyles, 'fullpagechat-styles');
 
     const addMessage = (newMsgs) => {
         setMessages(prev => [...prev.filter(m => !m.isQuickReplies), ...newMsgs]);
@@ -116,185 +88,166 @@ function FullPageChat() {
     const getFilteredFaqs = () => !selectedCat ? [] : faqs.filter(f => f.category === selectedCat);
 
     return (
-        <Box sx={{
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            bgcolor: isDark ? '#04100e' : '#f8fcf9',
-        }}>
+        <div className="h-screen flex flex-col" style={{ backgroundColor: isDark ? '#04100e' : '#f8fcf9' }}>
             {/* Header */}
-            <Box sx={{
-                px: { xs: 2, md: 4 },
-                py: { xs: 1.5, md: 2 },
-                background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DK})`,
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                flexShrink: 0,
-            }}>
-                <IconButton onClick={() => navigate(-1)} sx={{ color: '#fff' }}>
+            <div className="px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-2 flex-shrink-0" style={{ background: `linear-gradient(135deg, ${GREEN}, ${GREEN_DK})`, color: '#fff' }}>
+                <button onClick={() => navigate(-1)} className="p-2 rounded-md hover:bg-white/10 transition-colors text-white">
                     <i className="fa-solid fa-arrow-right" />
-                </IconButton>
-                <Box sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
+                </button>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                     <i className="fa-solid fa-robot" style={{ fontSize: '1.2rem' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.15rem' }, fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
+                </div>
+                <div className="flex-1">
+                    <p className="font-extrabold" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", fontSize: 'clamp(1rem, 2vw, 1.15rem)' }}>
                         مساعد نور الذكي
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.75rem', opacity: 0.85, fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
+                    </p>
+                    <p className="text-xs opacity-85" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", fontSize: '0.75rem' }}>
                         مدعوم بالذكاء الاصطناعي
-                    </Typography>
-                </Box>
-            </Box>
+                    </p>
+                </div>
+            </div>
 
             {/* Messages */}
-            <Box sx={{
-                flex: 1,
-                overflow: 'auto',
-                px: { xs: 2, md: 4 },
-                py: { xs: 2, md: 3 },
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5,
-                direction: 'rtl',
-                maxWidth: 800,
-                mx: 'auto',
-                width: '100%',
-            }}>
+            <div
+                className="flex-1 overflow-auto px-2 md:px-4 py-2 md:py-3 flex flex-col gap-1.5 max-w-[800px] mx-auto w-full"
+                dir="rtl"
+            >
                 {messages.map((msg, idx) => (
-                    <Box key={idx}>
-                        <MessageBubble isUser={msg.type === 'user'}>{msg.text}</MessageBubble>
+                    <div key={idx}>
+                        <div
+                            className="text-sm leading-relaxed break-words whitespace-pre-wrap max-w-[75%]"
+                            style={{
+                                padding: '12px 18px',
+                                borderRadius: msg.type === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                backgroundColor: msg.type === 'user' ? GREEN : (isDark ? '#1e2d2b' : '#f0faf5'),
+                                color: msg.type === 'user' ? '#fff' : (isDark ? '#e2e8f0' : '#2d3436'),
+                                alignSelf: msg.type === 'user' ? 'flex-end' : 'flex-start',
+                                animation: 'slideUp 0.3s ease both',
+                                fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                                fontSize: '0.95rem',
+                                lineHeight: 1.7,
+                                boxShadow: msg.type === 'user' ? `0 2px 8px ${GREEN}33` : '0 1px 4px rgba(0,0,0,0.04)',
+                            }}
+                            dangerouslySetInnerHTML={msg.__html ? { __html: msg.text } : undefined}
+                        >
+                            {!msg.__html && msg.text}
+                        </div>
                         {msg.isQuickReplies && (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                            <div className="flex flex-wrap gap-1 mt-2">
                                 {quickReplies.map(qr => (
-                                    <Button key={qr.faqId} size="medium" onClick={() => handleQuickReply(qr.faqId)}
-                                        sx={{
-                                            borderRadius: '999px', fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                                            fontSize: '0.82rem', textTransform: 'none', fontWeight: 600,
-                                            py: 0.6, px: 1.8,
-                                            bgcolor: isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.06),
+                                    <button
+                                        key={qr.faqId}
+                                        onClick={() => handleQuickReply(qr.faqId)}
+                                        className="flex items-center gap-1 rounded-full text-sm font-semibold transition-colors"
+                                        style={{
+                                            padding: '0.6rem 1.8rem',
+                                            fontSize: '0.82rem',
+                                            fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                                            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : `${GREEN}0f`,
                                             color: isDark ? '#94a3b8' : '#5a6a6a',
-                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.1)}`,
-                                            '&:hover': { bgcolor: alpha(GREEN, 0.1), borderColor: alpha(GREEN, 0.3) },
-                                            '& i': { ml: 0.5 },
+                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : `${GREEN}1a`}`,
                                         }}
-                                        startIcon={<i className={qr.icon} />}
+                                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${GREEN}1a`; e.currentTarget.style.borderColor = `${GREEN}4d`; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : `${GREEN}0f`; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : `${GREEN}1a`; }}
                                     >
+                                        <i className={qr.icon} style={{ marginLeft: '0.5rem' }}></i>
                                         {qr.label}
-                                    </Button>
+                                    </button>
                                 ))}
-                            </Box>
+                            </div>
                         )}
-                    </Box>
+                    </div>
                 ))}
 
                 {loading && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 1 }}>
-                        <CircularProgress size={22} sx={{ color: GREEN }} />
-                        <Typography sx={{ fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#889a98', fontFamily: "'Cairo', 'Tajawal', sans-serif" }}>
+                    <div className="flex items-center gap-1.5 mr-1">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-t-transparent" style={{ borderColor: `${GREEN} transparent transparent transparent` }}></div>
+                        <p className="text-sm" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", color: isDark ? '#94a3b8' : '#889a98' }}>
                             جاري التفكير...
-                        </Typography>
-                    </Box>
+                        </p>
+                    </div>
                 )}
 
                 {messages.length > 0 && !loading && (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, mt: 2, pt: 2, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.08)}` }}>
+                    <div className="flex flex-wrap mt-2 pt-2" style={{ gap: '0.8rem', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : `${GREEN}14`}` }}>
                         {categories.map(cat => (
-                            <Button key={cat} size="small"
+                            <button
+                                key={cat}
                                 onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
-                                sx={{
-                                    borderRadius: '999px', fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                                    fontSize: '0.72rem', textTransform: 'none',
-                                    fontWeight: selectedCat === cat ? 700 : 500, py: 0.4, px: 1.2,
-                                    bgcolor: selectedCat === cat ? GREEN : 'transparent',
+                                className="rounded-full text-xs transition-colors"
+                                style={{
+                                    padding: '0.4rem 1.2rem',
+                                    fontSize: '0.72rem',
+                                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                                    fontWeight: selectedCat === cat ? 700 : 500,
+                                    backgroundColor: selectedCat === cat ? GREEN : 'transparent',
                                     color: selectedCat === cat ? '#fff' : (isDark ? '#94a3b8' : '#5a6a6a'),
-                                    border: `1px solid ${selectedCat === cat ? GREEN : (isDark ? 'rgba(255,255,255,0.08)' : alpha(GREEN, 0.1))}`,
+                                    border: `1px solid ${selectedCat === cat ? GREEN : (isDark ? 'rgba(255,255,255,0.08)' : `${GREEN}1a`)}`,
                                 }}
                             >
                                 {cat}
-                            </Button>
+                            </button>
                         ))}
-                    </Box>
+                    </div>
                 )}
 
                 {selectedCat && getFilteredFaqs().map(faq => (
-                    <Box key={faq.id} onClick={() => handleFaqClick(faq.id)}
-                        sx={{
-                            p: 1.5, borderRadius: '14px',
-                            bgcolor: isDark ? 'rgba(255,255,255,0.03)' : alpha(GREEN, 0.03),
-                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : alpha(GREEN, 0.06)}`,
-                            cursor: 'pointer', transition: 'all 0.2s ease',
-                            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.06) },
+                    <div
+                        key={faq.id}
+                        onClick={() => handleFaqClick(faq.id)}
+                        className="p-1.5 rounded-xl cursor-pointer transition-all duration-200"
+                        style={{
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : `${GREEN}08`,
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : `${GREEN}0f`}`,
                         }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : `${GREEN}0f`; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : `${GREEN}08`; }}
                     >
-                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Cairo', 'Tajawal', sans-serif", color: isDark ? '#e2e8f0' : '#2d3436' }}>
-                            <i className="fa-regular fa-circle-question" style={{ fontSize: '0.75rem', ml: 0.6, color: GREEN }} />
+                        <p className="text-sm font-semibold" style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", color: isDark ? '#e2e8f0' : '#2d3436' }}>
+                            <i className="fa-regular fa-circle-question" style={{ fontSize: '0.75rem', marginLeft: '0.6rem', color: GREEN }}></i>
                             {' '}{faq.question}
-                        </Typography>
-                    </Box>
+                        </p>
+                    </div>
                 ))}
 
                 <div ref={messagesEndRef} />
-            </Box>
+            </div>
 
             {/* Input */}
-            <Box sx={{
-                p: { xs: 2, md: 3 },
-                borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : alpha(GREEN, 0.08)}`,
-                bgcolor: isDark ? '#0a1f1c' : '#ffffff',
-            }}>
-                <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-                    <TextField
-                        inputRef={inputRef}
-                        fullWidth
-                        size="medium"
-                        placeholder="اكتب سؤالك هنا..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        disabled={loading}
-                        dir="rtl"
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '16px',
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#fff',
-                                fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                                fontSize: '0.95rem',
-                                '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.12)' : alpha(GREEN, 0.15) },
-                                '&:hover fieldset': { borderColor: alpha(GREEN, 0.3) },
-                                '&.Mui-focused fieldset': { borderColor: GREEN },
-                            },
-                        }}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton onClick={handleSend} disabled={loading || !input.trim()}
-                                        sx={{
-                                            bgcolor: input.trim() && !loading ? GREEN : 'transparent',
-                                            color: input.trim() && !loading ? '#fff' : (isDark ? '#64748b' : '#a0b4b2'),
-                                            borderRadius: '10px', width: 38, height: 38,
-                                            '&:hover': { bgcolor: input.trim() && !loading ? GREEN_DK : alpha(GREEN, 0.1) },
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-paper-plane" style={{ fontSize: '0.9rem' }} />
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                </Box>
-            </Box>
-        </Box>
+            <div className="p-2 md:p-3" style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : `${GREEN}14`}`, backgroundColor: isDark ? '#0a1f1c' : '#ffffff' }}>
+                <div className="max-w-[800px] mx-auto">
+                    <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#fff', borderColor: isDark ? 'rgba(255,255,255,0.12)' : `${GREEN}26` }}>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="اكتب سؤالك هنا..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            disabled={loading}
+                            dir="rtl"
+                            className="flex-1 bg-transparent border-none outline-none text-sm"
+                            style={{ fontFamily: "'Cairo', 'Tajawal', sans-serif", fontSize: '0.95rem' }}
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={loading || !input.trim()}
+                            className="flex items-center justify-center rounded-xl transition-colors"
+                            style={{
+                                width: 38,
+                                height: 38,
+                                backgroundColor: input.trim() && !loading ? GREEN : 'transparent',
+                                color: input.trim() && !loading ? '#fff' : (isDark ? '#64748b' : '#a0b4b2'),
+                            }}
+                            onMouseEnter={(e) => { if (input.trim() && !loading) e.currentTarget.style.backgroundColor = GREEN_DK; }}
+                            onMouseLeave={(e) => { if (input.trim() && !loading) e.currentTarget.style.backgroundColor = GREEN; }}
+                        >
+                            <i className="fa-solid fa-paper-plane" style={{ fontSize: '0.9rem' }} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

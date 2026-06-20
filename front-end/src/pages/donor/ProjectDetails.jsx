@@ -1,73 +1,17 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    Button,
-    Stack,
-    Tabs,
-    Tab,
-    LinearProgress,
-    Chip,
-    Avatar,
-    Divider,
-    Paper,
-    useTheme,
-    alpha
-} from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 import { t, formatCurrency, formatNumber, formatDate, getLanguage } from '../../i18n';
 import { updates } from '../../data/mockData';
 import { useAdminData } from '../../contexts/AdminDataContext';
-import styled from '@emotion/styled';
-
-// --- Styled Components ---
-
-const HeroSection = styled(Box)(({ theme, image }) => ({
-    height: '50vh',
-    minHeight: 400,
-    maxHeight: 600,
-    background: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%), url(${image})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    display: 'flex',
-    alignItems: 'flex-end',
-    color: theme.palette.common.white,
-    paddingBottom: theme.spacing(6),
-    position: 'relative',
-}));
-
-const SidebarCard = styled(Card)(({ theme }) => ({
-    borderRadius: theme.shape.borderRadius * 2,
-    boxShadow: theme.shadows[4],
-    position: 'sticky',
-    top: theme.spacing(12),
-}));
-
-const AmountButton = styled(Button)(({ theme, selected }) => ({
-    width: '100%',
-    borderRadius: theme.shape.borderRadius,
-    border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
-    backgroundColor: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-    color: selected ? theme.palette.primary.main : theme.palette.text.primary,
-    '&:hover': {
-        backgroundColor: selected ? alpha(theme.palette.primary.main, 0.2) : theme.palette.action.hover,
-        border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.text.secondary}`,
-    },
-}));
 
 function ProjectDetails() {
     const { id } = useParams();
-    const theme = useTheme();
+    const { isDark } = useTheme();
     const [activeTab, setActiveTab] = useState(0);
     const [donationAmount, setDonationAmount] = useState(100);
     const isEn = getLanguage() === 'en';
-    
 
-    // Read live data from shared context
     const { state } = useAdminData();
     const projects = state.projects;
 
@@ -76,14 +20,12 @@ function ProjectDetails() {
 
     if (!project) {
         return (
-            <Box sx={{ py: 12, textAlign: 'center' }}>
-                <Typography variant="h4" gutterBottom>
-                    {'المشروع غير موجود'}
-                </Typography>
-                <Button component={Link} to="/projects" variant="contained">
+            <div className="py-12 text-center">
+                <h4 className="text-xl mb-2">{'المشروع غير موجود'}</h4>
+                <Link to="/projects" className="bg-primary-500 text-white px-5 py-2.5 rounded-md font-semibold hover:bg-primary-600 transition-colors">
                     {'العودة للمشاريع'}
-                </Button>
-            </Box>
+                </Link>
+            </div>
         );
     }
 
@@ -91,246 +33,243 @@ function ProjectDetails() {
     const program = project.program;
     const percentage = Math.round((project.raised / project.goal) * 100);
 
-    const handleTabChange = (event, newValue) => {
-        setActiveTab(newValue);
-    };
+    const tabs = [t('projectDetails.overview'), t('projectDetails.updates'), t('projectDetails.budget'), t('projectDetails.faq')];
 
     return (
-        <Box sx={{ pb: 8 }}>
-            {/* Hero Image */}
-            <HeroSection image={project.image}>
-                <Container>
-                    <Chip
-                        label={program}
-                        color="primary"
-                        sx={{ mb: 2, fontWeight: 'bold' }}
-                    />
-                    <Typography
-                        variant="h2"
-                        fontWeight="bold"
-                        sx={{
-                            textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                            fontSize: { xs: '2rem', md: '3rem' }
-                        }}
+        <div className="pb-8">
+            <div
+                className="h-[50vh] min-h-[400px] max-h-[600px] flex items-end text-white pb-6 relative"
+                style={{
+                    background: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%), url(${project.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                }}
+            >
+                <div className="max-w-[1200px] mx-auto px-4 md:px-6 w-full">
+                    <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-primary-500 text-white mb-2">
+                        {program}
+                    </span>
+                    <h2
+                        className="font-bold"
+                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: 'clamp(2rem, 5vw, 3rem)' }}
                     >
                         {title}
-                    </Typography>
-                </Container>
-            </HeroSection>
+                    </h2>
+                </div>
+            </div>
 
-            <Container sx={{ mt: 6 }}>
-                <Grid container spacing={6}>
-                    {/* Main Content */}
-                    <Grid item xs={12} lg={8}>
-                        <Stack direction="row" spacing={4} sx={{ mb: 4, color: 'text.secondary' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <div className="max-w-[1200px] mx-auto px-4 md:px-6 mt-6">
+                <div className="grid grid-cols-12 gap-6">
+                    <div className="col-span-12 lg:col-span-8">
+                        <div className="flex gap-4 mb-4 text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-1">
                                 <i className="fa-solid fa-location-dot"></i>
                                 {project.location}
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            </div>
+                            <div className="flex items-center gap-1">
                                 <i className="fa-regular fa-clock"></i>
                                 {project.daysLeft} {t('projects.daysLeft')}
-                            </Box>
-                        </Stack>
+                            </div>
+                        </div>
 
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                            <Tabs value={activeTab} onChange={handleTabChange} aria-label="project tabs">
-                                <Tab label={t('projectDetails.overview')} />
-                                <Tab label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {t('projectDetails.updates')}
-                                        {projectUpdates.length > 0 && (
-                                            <Chip label={projectUpdates.length} size="small" color="secondary" sx={{ height: 20 }} />
+                        <div className="border-b border-neutral-200 dark:border-neutral-700 mb-3">
+                            <div className="flex">
+                                {tabs.map((label, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setActiveTab(i)}
+                                        className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === i ? 'border-primary-500 text-primary-500' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+                                    >
+                                        {i === 1 ? (
+                                            <span className="flex items-center gap-1">
+                                                {label}
+                                                {projectUpdates.length > 0 && (
+                                                    <span className="inline-flex px-1.5 py-0.5 rounded text-xs font-medium bg-secondary-500 text-white min-w-[20px] h-5 flex items-center justify-center">
+                                                        {projectUpdates.length}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        ) : (
+                                            label
                                         )}
-                                    </Box>
-                                } />
-                                <Tab label={t('projectDetails.budget')} />
-                                <Tab label={t('projectDetails.faq')} />
-                            </Tabs>
-                        </Box>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                        {/* Tab Panels */}
-                        <Box role="tabpanel" hidden={activeTab !== 0}>
+                        <div role="tabpanel" hidden={activeTab !== 0}>
                             {activeTab === 0 && (
-                                <Box>
-                                    <Typography variant="h5" fontWeight="bold" gutterBottom>{t('projectDetails.aboutProject')}</Typography>
-                                    <Typography paragraph sx={{ mb: 4, lineHeight: 1.8 }}>{project.description}</Typography>
+                                <div>
+                                    <h5 className="text-lg font-bold mb-1">{t('projectDetails.aboutProject')}</h5>
+                                    <p className="mb-4 leading-relaxed">{project.description}</p>
 
-                                    <Paper elevation={0} sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.05), borderLeft: `4px solid ${theme.palette.primary.main}`, mb: 4 }}>
-                                        <Typography fontStyle="italic">
+                                    <div className="p-3 bg-primary-500/5 border-r-4 border-primary-500 mb-4 rounded-r-lg" style={{ borderInlineStart: `4px solid var(--color-primary-500, ${isDark ? '#60a5fa' : '#3b82f6'})` }}>
+                                        <p className="italic">
                                             {isEn
                                                 ? 'Through this project, we aim to provide support and assistance to the most vulnerable communities in Egyptian society. Your generous donation helps change many lives and achieve lasting positive impact.'
                                                 : 'نسعى من خلال هذا المشروع إلى تقديم الدعم والمساعدة للفئات الأكثر احتياجًا في المجتمع المصري. بتبرعك الكريم، تساهم في تغيير حياة الكثيرين وتحقيق الأثر الإيجابي المستدام.'}
-                                        </Typography>
-                                    </Paper>
+                                        </p>
+                                    </div>
 
-                                    <Typography variant="h5" fontWeight="bold" gutterBottom>{t('projectDetails.projectGoals')}</Typography>
-                                    <Box component="ul" sx={{ pl: 2 }}>
+                                    <h5 className="text-lg font-bold mb-1">{t('projectDetails.projectGoals')}</h5>
+                                    <ul className="pr-2 list-disc">
                                         {[
                                             'الوصول إلى الفئات المستهدفة في المناطق الأكثر احتياجًا',
                                             'توفير الدعم المادي والعيني بشكل مباشر',
                                             'ضمان الشفافية الكاملة في توزيع التبرعات',
                                             'متابعة وتقييم الأثر بشكل دوري'
                                         ].map((goal, index) => (
-                                            <Typography component="li" key={index} sx={{ mb: 1 }}>{goal}</Typography>
+                                            <li key={index} className="mb-1">{goal}</li>
                                         ))}
-                                    </Box>
-                                </Box>
+                                    </ul>
+                                </div>
                             )}
-                        </Box>
+                        </div>
 
-                        <Box role="tabpanel" hidden={activeTab !== 1}>
+                        <div role="tabpanel" hidden={activeTab !== 1}>
                             {activeTab === 1 && (
-                                <Stack spacing={3}>
+                                <div className="flex flex-col gap-3">
                                     {projectUpdates.length === 0 ? (
-                                        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+                                        <p className="text-neutral-500 dark:text-neutral-400 text-center py-4">
                                             {'لا توجد تحديثات حالياً'}
-                                        </Typography>
+                                        </p>
                                     ) : (
                                         projectUpdates.map(update => (
-                                            <Paper key={update.id} elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-                                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-                                                    <Box
-                                                        component="img"
+                                            <div key={update.id} className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-neutral-100 dark:border-neutral-700 p-3">
+                                                <div className="flex flex-col sm:flex-row gap-3">
+                                                    <img
                                                         src={update.image}
                                                         alt={update.title}
-                                                        sx={{ width: { xs: '100%', sm: 120 }, height: 120, objectFit: 'cover', borderRadius: 2 }}
+                                                        className="w-full sm:w-[120px] h-[120px] object-cover rounded-lg"
                                                     />
-                                                    <Box sx={{ flex: 1 }}>
-                                                        <Typography variant="h6" gutterBottom>{update.title}</Typography>
-                                                        <Typography variant="body2" color="text.secondary" paragraph>{update.content}</Typography>
-                                                        <Typography variant="caption" color="text.disabled">
-                                                            <i className="fa-regular fa-calendar" style={{ marginInlineEnd: 6 }}></i>
+                                                    <div className="flex-1">
+                                                        <h6 className="font-bold mb-1">{update.title}</h6>
+                                                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">{update.content}</p>
+                                                        <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                                                            <i className="fa-regular fa-calendar ml-1"></i>
                                                             {formatDate(update.date)}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                            </Paper>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         ))
                                     )}
-                                </Stack>
+                                </div>
                             )}
-                        </Box>
+                        </div>
 
-                        <Box role="tabpanel" hidden={activeTab !== 2}>
+                        <div role="tabpanel" hidden={activeTab !== 2}>
                             {activeTab === 2 && (
-                                <Box>
-                                    <Typography variant="h5" fontWeight="bold" gutterBottom>{t('projectDetails.budgetBreakdown')}</Typography>
-                                    <Stack spacing={3} sx={{ mt: 3 }}>
+                                <div>
+                                    <h5 className="text-lg font-bold mb-1">{t('projectDetails.budgetBreakdown')}</h5>
+                                    <div className="flex flex-col gap-3 mt-3">
                                         {[
                                             { label: 'المستلزمات والمواد', value: 60 },
                                             { label: 'النقل والتوزيع', value: 20 },
                                             { label: 'التشغيل والإدارة', value: 15 },
                                             { label: 'الطوارئ والاحتياطي', value: 5 }
                                         ].map((item, index) => (
-                                            <Box key={index}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                    <Typography fontWeight="medium">{item.label}</Typography>
-                                                    <Typography fontWeight="bold">{item.value}%</Typography>
-                                                </Box>
-                                                <LinearProgress variant="determinate" value={item.value} sx={{ height: 10, borderRadius: 5 }} />
-                                            </Box>
+                                            <div key={index}>
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="font-medium">{item.label}</span>
+                                                    <span className="font-bold">{item.value}%</span>
+                                                </div>
+                                                <div className="h-2.5 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                                                    <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${item.value}%` }}></div>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </Stack>
-                                </Box>
+                                    </div>
+                                </div>
                             )}
-                        </Box>
+                        </div>
 
-                        <Box role="tabpanel" hidden={activeTab !== 3}>
+                        <div role="tabpanel" hidden={activeTab !== 3}>
                             {activeTab === 3 && (
-                                <Stack spacing={2}>
+                                <div className="flex flex-col gap-2">
                                     {[
                                         { q: 'كيف يمكنني التأكد من وصول تبرعي؟', a: 'نلتزم بالشفافية الكاملة وننشر تحديثات دورية عن توزيع التبرعات مع صور وتقارير مفصلة.'},
                                         { q: 'هل يمكنني التبرع بشكل شهري؟', a: 'نعم، يمكنك إعداد تبرع شهري متكرر لدعم المشروع بشكل مستمر.'},
                                         { q: 'هل التبرع معفى من الضرائب؟', a: 'نعم، التبرعات معفاة من الضرائب وفقًا للقوانين المصرية ونوفر إيصالات رسمية.'}
                                     ].map((faq, index) => (
-                                        <Paper key={index} elevation={0} variant="outlined" sx={{ p: 2 }}>
-                                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>{faq.q}</Typography>
-                                            <Typography variant="body2" color="text.secondary">{faq.a}</Typography>
-                                        </Paper>
+                                        <div key={index} className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-2">
+                                            <p className="font-bold mb-1">{faq.q}</p>
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400">{faq.a}</p>
+                                        </div>
                                     ))}
-                                </Stack>
+                                </div>
                             )}
-                        </Box>
-                    </Grid>
+                        </div>
+                    </div>
 
-                    {/* Sidebar */}
-                    <Grid item xs={12} lg={4}>
-                        <SidebarCard>
-                            <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ mb: 3 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 1 }}>
-                                        <Typography variant="h4" fontWeight="bold" color="primary.main">
+                    <div className="col-span-12 lg:col-span-4">
+                        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-lg sticky top-12 border border-neutral-100 dark:border-neutral-700">
+                            <div className="p-4">
+                                <div className="mb-3">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <h4 className="text-2xl font-bold text-primary-500">
                                             {formatCurrency(project.raised)}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                        </h4>
+                                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
                                             {'من'} {formatCurrency(project.goal)}
-                                        </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={percentage > 100 ? 100 : percentage}
-                                        sx={{ height: 12, borderRadius: 6, mb: 2 }}
-                                    />
-                                    <Grid container justifyContent="space-between" textAlign="center">
-                                        <Grid item>
-                                            <Typography variant="h6" fontWeight="bold">{percentage}%</Typography>
-                                            <Typography variant="caption" color="text.secondary">{'مكتمل'}</Typography>
-                                        </Grid>
-                                        <Grid item>
-                                            <Typography variant="h6" fontWeight="bold">{formatNumber(project.donors)}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{t('projects.donors')}</Typography>
-                                        </Grid>
-                                        <Grid item>
-                                            <Typography variant="h6" fontWeight="bold">{project.daysLeft}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{t('projects.daysLeft')}</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
+                                        </p>
+                                    </div>
+                                    <div className="h-3 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden mb-2">
+                                        <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${percentage > 100 ? 100 : percentage}%` }}></div>
+                                    </div>
+                                    <div className="flex justify-between text-center">
+                                        <div>
+                                            <h6 className="font-bold text-lg">{percentage}%</h6>
+                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{'مكتمل'}</span>
+                                        </div>
+                                        <div>
+                                            <h6 className="font-bold text-lg">{formatNumber(project.donors)}</h6>
+                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('projects.donors')}</span>
+                                        </div>
+                                        <div>
+                                            <h6 className="font-bold text-lg">{project.daysLeft}</h6>
+                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('projects.daysLeft')}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <Divider sx={{ my: 3 }} />
+                                <hr className="border-t border-neutral-200 dark:border-neutral-700 my-3" />
 
-                                <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
-                                    {t('donate.selectAmount')}
-                                </Typography>
+                                <p className="text-sm font-medium mb-2">{t('donate.selectAmount')}</p>
 
-                                <Grid container spacing={1} sx={{ mb: 3 }}>
+                                <div className="grid grid-cols-3 gap-1 mb-3">
                                     {[50, 100, 200, 500, 1000, 2000].map(amount => (
-                                        <Grid item xs={4} key={amount}>
-                                            <AmountButton
-                                                selected={donationAmount === amount}
-                                                onClick={() => setDonationAmount(amount)}
-                                            >
-                                                {formatCurrency(amount, 'USD').replace('$', '')} {/* Simplified for grid fit */}
-                                            </AmountButton>
-                                        </Grid>
+                                        <button
+                                            key={amount}
+                                            onClick={() => setDonationAmount(amount)}
+                                            className={`w-full rounded-lg border py-2 text-sm font-semibold transition-colors ${
+                                                donationAmount === amount
+                                                    ? 'bg-primary-500/10 border-primary-500 text-primary-500'
+                                                    : 'border-neutral-200 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
+                                            }`}
+                                        >
+                                            {formatCurrency(amount, 'USD').replace('$', '')}
+                                        </button>
                                     ))}
-                                </Grid>
+                                </div>
 
-                                <Button
-                                    component={Link}
+                                <Link
                                     to={`/donate?project=${project.id}&amount=${donationAmount}`}
-                                    variant="contained"
-                                    size="large"
-                                    fullWidth
-                                    sx={{ mb: 2, height: 48 }}
+                                    className="block bg-primary-500 text-white text-center px-5 py-3 rounded-md font-semibold hover:bg-primary-600 transition-colors mb-2"
                                 >
                                     {t('common.donate')}
-                                </Button>
+                                </Link>
 
-                                <Button
-                                    fullWidth
-                                    startIcon={<i className="fa-solid fa-share-nodes"></i>}
-                                    sx={{ color: 'text.secondary' }}
-                                >
+                                <button className="w-full text-neutral-500 dark:text-neutral-400 text-sm py-2 flex items-center justify-center gap-2 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
+                                    <i className="fa-solid fa-share-nodes"></i>
                                     {t('projectDetails.shareProject')}
-                                </Button>
-                            </CardContent>
-                        </SidebarCard>
-                    </Grid>
-                </Grid>
-            </Container>
-        </Box>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

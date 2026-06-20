@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import './Modal.css';
+import { useInjectStyles } from '../../../utils/injectStyles';
 
 /**
  * Modal Component - Dialog overlay
@@ -15,6 +15,7 @@ function Modal({
     footer,
     className = '',
 }) {
+    useInjectStyles(`@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`, 'modal-keyframes');
     // Handle escape key
     const handleEscape = useCallback((e) => {
         if (e.key === 'Escape' && isOpen) {
@@ -47,14 +48,21 @@ function Modal({
         }
     };
 
+    const sizeClasses = {
+        sm: 'max-w-[400px]',
+        md: 'max-w-[560px]',
+        lg: 'max-w-[720px]',
+        xl: 'max-w-[900px]',
+        full: 'max-w-[calc(100vw-2rem)]',
+    };
     const classNames = [
-        'modal',
-        `modal--${size}`,
+        'bg-white dark:bg-neutral-800 rounded-xl shadow-modal max-h-[calc(100vh-2rem)] flex flex-col animate-[slideUp_200ms_ease] w-full',
+        sizeClasses[size] || sizeClasses.md,
         className
     ].filter(Boolean).join(' ');
 
     return (
-        <div className="modal__overlay" onClick={handleOverlayClick}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[300]" onClick={handleOverlayClick}>
             <div
                 className={classNames}
                 role="dialog"
@@ -62,11 +70,11 @@ function Modal({
                 aria-labelledby={title ? 'modal-title' : undefined}
             >
                 {(title || showCloseButton) && (
-                    <div className="modal__header">
-                        {title && <h2 id="modal-title" className="modal__title">{title}</h2>}
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-700">
+                        {title && <h2 id="modal-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 m-0">{title}</h2>}
                         {showCloseButton && (
                             <button
-                                className="modal__close"
+                                className="flex items-center justify-center w-9 h-9 border-none bg-transparent rounded-md cursor-pointer text-neutral-500 transition-all hover:bg-neutral-100 dark:hover:bg-neutral-700"
                                 onClick={onClose}
                                 aria-label="إغلاق"
                             >
@@ -78,12 +86,12 @@ function Modal({
                     </div>
                 )}
 
-                <div className="modal__body">
+                <div className="p-6 overflow-y-auto flex-1">
                     {children}
                 </div>
 
                 {footer && (
-                    <div className="modal__footer">
+                    <div className="flex gap-3 justify-start px-6 py-4 border-t border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl ltr:justify-end">
                         {footer}
                     </div>
                 )}

@@ -1,110 +1,84 @@
-import {
-    Box, Card, TextField, Tabs, Tab,
-    InputAdornment, Stack, useTheme
-} from '@mui/material';
-
-/**
- * AdminFilterBar — Reusable filter bar with search, tabs, and dropdown filters.
- *
- * @param {string}  [searchValue]       - Current search value
- * @param {Function} [onSearchChange]   - Search change handler
- * @param {string}  [searchPlaceholder] - Search placeholder text
- * @param {Array}   [tabs]              - Tab definitions: { label, value }
- * @param {string}  [activeTab]         - Currently active tab value
- * @param {Function} [onTabChange]      - Tab change handler (event, newValue)
- * @param {React.ReactNode} [children]  - Additional filter dropdowns or controls
- */
 function AdminFilterBar({
-    searchValue,
-    onSearchChange,
-    searchPlaceholder = 'بحث...',
-    tabs,
-    activeTab,
-    onTabChange,
-    children
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = 'بحث...',
+  tabs,
+  activeTab,
+  onTabChange,
+  children
 }) {
-    const theme = useTheme();
-
-    // Tabs-only mode
-    if (tabs && !onSearchChange && !children) {
-        return (
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={onTabChange}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                >
-                    {tabs.map((tab) => (
-                        <Tab
-                            key={tab.value}
-                            label={tab.label}
-                            value={tab.value}
-                            icon={tab.icon ? <i className={tab.icon} /> : undefined}
-                            iconPosition={tab.icon ? 'start' : undefined}
-                        />
-                    ))}
-                </Tabs>
-            </Box>
-        );
-    }
-
-    // Tabs with search
-    if (tabs && onSearchChange) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={onTabChange}
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
-                >
-                    {tabs.map((tab) => (
-                        <Tab key={tab.value} label={tab.label} value={tab.value} />
-                    ))}
-                </Tabs>
-                <TextField
-                    placeholder={searchPlaceholder}
-                    size="small"
-                    value={searchValue}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <i className="fa-solid fa-magnifying-glass" style={{ color: theme.palette.text.secondary }} />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{ width: 300 }}
-                />
-            </Box>
-        );
-    }
-
-    // Full filter bar (search + dropdown filters)
+  if (tabs && !onSearchChange && !children) {
     return (
-        <Card elevation={0} sx={{ border: 1, borderColor: 'divider', p: 2 }}>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {onSearchChange && (
-                    <TextField
-                        placeholder={searchPlaceholder}
-                        variant="outlined"
-                        size="small"
-                        value={searchValue}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        sx={{ flexGrow: 1, minWidth: 200 }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <i className="fa-solid fa-magnifying-glass" style={{ color: theme.palette.text.secondary }} />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                )}
-                {children}
-            </Box>
-        </Card>
+      <div className="border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex gap-0 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={(e) => onTabChange?.(e, tab.value)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                activeTab === tab.value
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
+              }`}
+            >
+              {tab.icon && <i className={`${tab.icon} ml-1.5`} />}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
     );
+  }
+
+  if (tabs && onSearchChange) {
+    return (
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex gap-0 overflow-x-auto border-b border-neutral-200 dark:border-neutral-700">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={(e) => onTabChange?.(e, tab.value)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                activeTab === tab.value
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-[300px] max-w-full">
+          <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm pointer-events-none" />
+          <input
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pr-10 pl-9 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-800 shadow-card">
+      <div className="flex gap-4 flex-wrap">
+        {onSearchChange && (
+          <div className="relative flex-1 min-w-[200px]">
+            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm pointer-events-none" />
+            <input
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pr-10 pl-9 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-transparent focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+            />
+          </div>
+        )}
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default AdminFilterBar;
